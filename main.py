@@ -11,8 +11,9 @@ from classes import Project_Overview_Project, Project_Overview_Tasks
 
 
 class AdminWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, employee_id):
         super().__init__()
+        self.employee_id = employee_id
         self.ui = Ui_MainWindowManager()
         self.ui.setupUi(self)
 
@@ -36,6 +37,7 @@ class AdminWindow(QMainWindow):
         self.ui.manageTaskDeadlineButton.clicked.connect(self.updateTaskDeadline)
         self.ui.currentTaskCloseButton.clicked.connect(self.closeTask)
         self.ui.currentTaskReopenButton.clicked.connect(self.reopenTask)
+
 
 
 
@@ -210,8 +212,9 @@ class AdminWindow(QMainWindow):
         self.close()
 
 class UserWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, employee_id):
         super().__init__()
+        self.employee_id = employee_id
         self.ui = Ui_MainWindowUser()
         self.ui.setupUi(self)
 
@@ -234,20 +237,20 @@ class LoginWindow(QMainWindow):
         username = self.ui.loginUsernameInput.text()
         password = self.ui.loginPasswordInput.text()
         user = login(username, password)
-        if user == 1:
-            self.open_admin_page()
-        elif user == 2:
-            self.open_user_page()
+        if user[2] == 1:
+            self.open_admin_page(user[0])
+        elif user[2] == 2:
+            self.open_user_page(user[0])
         else:
             pass
 
-    def open_user_page(self):
-        self.user_page = UserWindow()
+    def open_user_page(self, employee_id):
+        self.user_page = UserWindow(employee_id)
         self.user_page.show()
         self.close()
 
-    def open_admin_page(self):
-        self.admin_page = AdminWindow()
+    def open_admin_page(self, employee_id):
+        self.admin_page = AdminWindow(employee_id)
         self.admin_page.show()
         self.close()
 

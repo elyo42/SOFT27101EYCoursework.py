@@ -19,12 +19,12 @@ def login(employee_id, password):
     if user:
         if user[2] == 1:  # Check if the user is an admin
             QMessageBox.information(None, "Login", "Login Successful! Welcome Admin!")
-            user = 1
+
 
             # Redirect to admin page
         else:
             QMessageBox.information(None, "Login", "Login Successful!")
-            user = 2
+
             # Redirect to standard user page
     else:
         QMessageBox.warning(None, "Login", "Invalid Employee ID or Password!")
