@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from loginpage import Ui_MainWindowLogin
 from memberpage import Ui_MainWindowUser
 from managerpage import Ui_MainWindowManager
-from button_mappings import projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL, manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL
+from button_mappings import projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL, manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL, updateTaskCompletionSQL
 from classes import Project_Overview_Project, Project_Overview_Tasks
 
 
@@ -28,6 +28,7 @@ class AdminWindow(QMainWindow):
         self.ui.selectTaskTypeInput.currentIndexChanged.connect(self.updateTasksList)
         self.initTaskList()
         self.ui.openTaskList.currentItemChanged.connect(self.populateTaskDetails)
+        self.ui.openTaskCompletionChangeButton.clicked.connect(self.updateTaskCompletion)
 
 
 
@@ -140,7 +141,20 @@ class AdminWindow(QMainWindow):
             self.ui.openTaskTitleLabel2.setText(task_details.get_task_name())
             self.ui.currentTaskHeaderLabel.setText(task_details.get_task_name())
 
-
+    def updateTaskCompletion(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = int(selected_task.text().split(' | ')[0].strip())
+            new_completion_text = self.ui.openTaskCompletionChangeBox.text()
+            try:
+                new_completion = int(new_completion_text)
+                if 0 <= new_completion <= 100:
+                    updateTaskCompletionSQL(task_id, new_completion)
+                    QMessageBox.information(None, None, "Completion Set.")
+                else:
+                    QMessageBox.information(None, None, "Please enter a valid percent (0-100).")
+            except ValueError:
+                QMessageBox.information(None, None, "Please enter a valid integer.")
 
 
 

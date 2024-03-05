@@ -186,5 +186,12 @@ def taskDetailsSQL(task_id):
     conn.close()
     return task
 
+def updateTaskCompletionSQL(task_id, task_completion):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('UPDATE task SET task_completion = ? WHERE task_id = ?', (task_completion, task_id))
+    conn.commit()
+    conn.close()
+
 
 
