@@ -4,7 +4,9 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from loginpage import Ui_MainWindowLogin
 from memberpage import Ui_MainWindowUser
 from managerpage import Ui_MainWindowManager
-from button_mappings import projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL, manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL, updateTaskCompletionSQL
+from button_mappings import (projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL,
+                             manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL,
+                             updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL)
 from classes import Project_Overview_Project, Project_Overview_Tasks
 
 
@@ -29,6 +31,12 @@ class AdminWindow(QMainWindow):
         self.initTaskList()
         self.ui.openTaskList.currentItemChanged.connect(self.populateTaskDetails)
         self.ui.openTaskCompletionChangeButton.clicked.connect(self.updateTaskCompletion)
+        self.initTaskNewUserBox()
+        self.ui.manageTaskNewUserButton.clicked.connect(self.updateTaskUser)
+        self.ui.manageTaskDeadlineButton.clicked.connect(self.updateTaskDeadline)
+        self.ui.currentTaskCloseButton.clicked.connect(self.closeTask)
+        self.ui.currentTaskReopenButton.clicked.connect(self.reopenTask)
+
 
 
 
@@ -155,6 +163,43 @@ class AdminWindow(QMainWindow):
                     QMessageBox.information(None, None, "Please enter a valid percent (0-100).")
             except ValueError:
                 QMessageBox.information(None, None, "Please enter a valid integer.")
+
+
+    def initTaskNewUserBox(self):
+        self.populateTaskNewUserBox()
+        self.show()
+    def populateTaskNewUserBox(self):
+        employees = employeeBoxSQL()
+        self.ui.currentTaskNewEmployeeInput.clear()
+        self.ui.currentTaskNewEmployeeInput.addItem('Select User')
+        for employee in employees:
+            self.ui.currentTaskNewEmployeeInput.addItem(employee[0])
+        self.ui.currentTaskNewEmployeeInput.setCurrentIndex(0)
+
+    def updateTaskDeadline(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = int(selected_task.text().split(' | ')[0].strip())
+            selected_date = self.ui.currentTaskNewDeadlineInput.date().toString('yyyy-MM-dd')
+            updateTaskDeadlineSQL(task_id, selected_date)
+    def updateTaskUser(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = selected_task.text().split(' | ')[0].strip()
+            selected_user = self.ui.currentTaskNewEmployeeInput.currentText()
+            updateTaskUserSQL(task_id, selected_user)
+    def closeTask(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = selected_task.text().split(' | ')[0].strip()
+            closeTaskSQL(task_id)
+
+    def reopenTask(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = selected_task.text().split(' | ')[0].strip()
+            reopenTaskSQL(task_id)
+
 
 
 

@@ -193,5 +193,38 @@ def updateTaskCompletionSQL(task_id, task_completion):
     conn.commit()
     conn.close()
 
+def updateTaskDeadlineSQL(task_id, new_deadline):
+    conn = sqlite3.connect('projectmanagement.db')
+    cur = conn.cursor()
+    cur.execute('UPDATE task SET task_deadline = ? WHERE task_id = ?', (new_deadline, task_id))
+    conn.commit()
+    conn.close()
+    QMessageBox.information(None, None, "Task Deadline Updated.")
 
 
+def updateTaskUserSQL(task_id, new_user):
+    conn = sqlite3.connect('projectmanagement.db')
+    cur = conn.cursor()
+    cur.execute('SELECT employee_id FROM users WHERE employee_name = ?', (new_user, ))
+    employee = int(cur.fetchone()[0])
+    cur.execute('UPDATE task SET employee_id = ? WHERE task_id = ?', (employee, task_id))
+    conn.commit()
+    conn.close()
+    QMessageBox.information(None, None, "Task Owner Updated.")
+
+
+def closeTaskSQL(task_id):
+    conn = sqlite3.connect('projectmanagement.db')
+    cur = conn.cursor()
+    cur.execute('UPDATE task SET task_status = 2 WHERE task_id = ?', (task_id,))
+    conn.commit()
+    conn.close()
+    QMessageBox.information(None, None, "Task Closed.")
+
+def reopenTaskSQL(task_id):
+    conn = sqlite3.connect('projectmanagement.db')
+    cur = conn.cursor()
+    cur.execute('UPDATE task SET task_status = 1 WHERE task_id = ?', (task_id,))
+    conn.commit()
+    conn.close()
+    QMessageBox.information(None, None, "Task Reopened.")
