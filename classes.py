@@ -29,3 +29,17 @@ class Project_Overview_Tasks:
     def get_employee_name(self):
         return self.employee_name
 
+class Task_Details:
+    def __init__(self, task_name, task_desc, task_deadline, task_completion):
+        self.task_name = task_name
+        self.task_desc = task_desc
+        self.task_deadline = task_deadline
+        self.task_completion = task_completion
+    def get_task_name(self):
+        return self.task_name
+    def get_task_desc(self):
+        return self.task_desc
+    def get_task_completion(self):
+        return str(self.task_completion)
+    def get_task_deadline(self):
+        return self.task_deadline

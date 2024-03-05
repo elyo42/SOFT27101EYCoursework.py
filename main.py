@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from loginpage import Ui_MainWindowLogin
 from memberpage import Ui_MainWindowUser
 from managerpage import Ui_MainWindowManager
-from button_mappings import projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL, manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL
+from button_mappings import projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL, manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL
 from classes import Project_Overview_Project, Project_Overview_Tasks
 
 
@@ -27,6 +27,7 @@ class AdminWindow(QMainWindow):
         self.ui.selectTaskEmployeeInput.currentIndexChanged.connect(self.updateTasksList)
         self.ui.selectTaskTypeInput.currentIndexChanged.connect(self.updateTasksList)
         self.initTaskList()
+        self.ui.openTaskList.currentItemChanged.connect(self.populateTaskDetails)
 
 
 
@@ -121,11 +122,26 @@ class AdminWindow(QMainWindow):
         self.ui.openTaskList.clear()
         for task in tasks:
             self.ui.openTaskList.addItem(f'{task[1]} | {task[0]}')
+
     def updateTasksList(self):
         project_name = self.ui.selectTaskProjectInput.currentText()
         employee_name = self.ui.selectTaskEmployeeInput.currentText()
         task_status = self.ui.selectTaskTypeInput.currentText()
         self.populateTasksList(project_name, employee_name, task_status)
+
+    def populateTaskDetails(self,selected_task):
+        if selected_task:
+            task_id = int(selected_task.text().split(' | ')[0].strip())
+            task_details = taskDetailsSQL(task_id)
+            self.ui.openTaskTitleLabel1.setText(task_details.get_task_name())
+            self.ui.taskDescLabel.setText(task_details.get_task_desc())
+            self.ui.openTaskDeadline.setText(task_details.get_task_deadline())
+            self.ui.openTaskCompletionLabel.setText(task_details.get_task_completion())
+            self.ui.openTaskTitleLabel2.setText(task_details.get_task_name())
+            self.ui.currentTaskHeaderLabel.setText(task_details.get_task_name())
+
+
+
 
 
 

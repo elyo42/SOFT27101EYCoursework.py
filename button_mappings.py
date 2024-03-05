@@ -1,6 +1,6 @@
 import sqlite3
 from PyQt5.QtWidgets import QMessageBox
-from classes import Project_Overview_Project, Project_Overview_Tasks
+from classes import Project_Overview_Project, Project_Overview_Tasks, Task_Details
 import datetime
 
 def login(employee_id, password):
@@ -176,6 +176,15 @@ def taskListSQL(project_name, employee_name, task_status):
     tasks = cur.fetchall()
     conn.close()
     return tasks
+
+def taskDetailsSQL(task_id):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('SELECT task_name, task_desc, task_deadline, task_completion FROM task WHERE task_id = ?', (task_id,))
+    task = Task_Details(*cur.fetchone())
+
+    conn.close()
+    return task
 
 
 
