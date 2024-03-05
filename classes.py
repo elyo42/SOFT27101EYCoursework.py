@@ -43,3 +43,12 @@ class Task_Details:
         return str(self.task_completion)
     def get_task_deadline(self):
         return self.task_deadline
+
+class comment:
+    def __init__(self, employee_name, comment_text, sent_datetime):
+        self.employee_name = employee_name
+        self.comment_text = comment_text
+        self.sent_datetime = sent_datetime
+    def __str__(self):
+        return f'[{self.sent_datetime}] | [{self.employee_name}] --- {self.comment_text}'
+

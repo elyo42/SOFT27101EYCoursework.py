@@ -42,7 +42,8 @@ def projectListSQL(project_type):
         cur.execute('SELECT project_name from projects WHERE project_status = 1')
     elif project_type == 'Outstanding':
         current_date = datetime.datetime.now().strftime("%Y-%m-%d")
-        cur.execute('SELECT project_name from projects WHERE project_status = 1 and (project_completion = "100" or CAST(project_deadline as DATE) < CAST(? as DATE) )', (current_date,))
+        cur.execute('SELECT project_name from projects p INNER JOIN task t on p.project_id = t.project_id '
+                    'WHERE project_status = 1 GROUP BY 1 HAVING (AVG(task_completion) = 100 or CAST(project_deadline as DATE) < CAST(? as DATE) )', (current_date,))
     else:
         cur.execute('SELECT project_name from projects WHERE project_status = 2')
     projects = cur.fetchall()
@@ -52,7 +53,8 @@ def projectListSQL(project_type):
 def projectOverviewProjectDetailsSQL(project_name):
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    cur.execute('SELECT project_name, project_desc, project_deadline, project_completion FROM projects WHERE project_name = ?', (project_name,))
+    cur.execute('SELECT project_name, project_desc, project_deadline, AVG(task_completion) FROM projects p '
+                'INNER JOIN task t on p.project_id = t.project_id WHERE project_name = ? GROUP BY 1,2,3', (project_name,))
     project_details = cur.fetchone()
     project = Project_Overview_Project(*project_details)
     return project
@@ -228,3 +230,6 @@ def reopenTaskSQL(task_id):
     conn.commit()
     conn.close()
     QMessageBox.information(None, None, "Task Reopened.")
+
+def writeComment():
+    pass
