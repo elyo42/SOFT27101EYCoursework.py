@@ -60,7 +60,7 @@ def projectOverviewProjectDetailsSQL(project_name):
 def projectOverviewTasksSQL(project_name):
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    cur.execute('SELECT t.task_name, (u.first_name || " " || u.last_name), t.task_deadline, t.task_completion FROM projects AS p INNER JOIN task as t ON p.project_id = t.project_id '
+    cur.execute('SELECT t.task_name, employee_name, t.task_deadline, t.task_completion FROM projects AS p INNER JOIN task as t ON p.project_id = t.project_id '
                 'Inner JOIN users AS u on t.employee_id = u.employee_id WHERE p.project_name = ?', (project_name,))
     rows = cur.fetchall()
     tasks = []

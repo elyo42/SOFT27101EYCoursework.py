@@ -6,8 +6,7 @@ cur = conn.cursor()
 
 cur.execute('''CREATE TABLE IF NOT EXISTS users (
                 employee_id INTEGER PRIMARY KEY,
-                first_name TEXT NOT NULL,
-                last_name TEXT NOT NULL,
+                employee_name TEXT NOT NULL,
                 email TEXT NOT NULL,
                 admin_flag INTEGER NOT NULL,
                 password TEXT NOT NULL
@@ -71,21 +70,21 @@ def insert_into_comment(comment_id, task_id, employee_id, comment_text, date_tim
     conn.commit()
     conn.close()
 
-def insert_into_user(employee_id, first_name, last_name, email, admin_flag, password):
+def insert_into_user(employee_id, employee_name, email, admin_flag, password):
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
-    cur.execute('''INSERT INTO users (employee_id, first_name, last_name, email, admin_flag, password)
-                    VALUES(?,?,?,?,?,?)''', (employee_id, first_name, last_name, email, admin_flag, password))
+    cur.execute('''INSERT INTO users (employee_id, employee_name, email, admin_flag, password)
+                    VALUES(?,?,?,?,?)''', (employee_id, employee_name, email, admin_flag, password))
     conn.commit()
     conn.close()
 
-insert_into_user('01290103','Elliot','York','elliotyork@outlook.com',1,'password1')
-insert_into_user('1162070','John','Smith','john@outlook.com',0,'password2')
+insert_into_user('01290103','Elliot York','elliotyork@outlook.com',1,'password1')
+insert_into_user('1162070','John Smith','john@outlook.com',0,'password2')
 
-insert_into_user('1162071', 'Alice', 'Johnson', 'alice@gmail.com', 0, 'abc123')
-insert_into_user('1162072', 'Bob', 'Anderson', 'bob@yahoo.com', 0, 'securepass')
-insert_into_user('1162073', 'Emily', 'Brown', 'emily@hotmail.com', 0, 'p@ssw0rd!')
-insert_into_user('1162074', 'Michael', 'Davis', 'michael@example.com', 0, 'mysecret')
+insert_into_user('1162071', 'Alice Johnson', 'alice@gmail.com', 0, 'abc123')
+insert_into_user('1162072', 'Bob Anderson', 'bob@yahoo.com', 0, 'securepass')
+insert_into_user('1162073', 'Emily Brown', 'emily@hotmail.com', 0, 'p@ssw0rd!')
+insert_into_user('1162074', 'Michael Davis', 'michael@example.com', 0, 'mysecret')
 
 insert_into_project(1, 'test_project1', 'test_project_1_desc', '10', '20240801', 1)
 insert_into_project(2, 'sample_project', 'description_of_sample_project', '5', '20240415', 1)
