@@ -44,7 +44,7 @@ class Task_Details:
     def get_task_deadline(self):
         return self.task_deadline
 
-class comment:
+class Comment:
     def __init__(self, employee_name, comment_text, sent_datetime):
         self.employee_name = employee_name
         self.comment_text = comment_text

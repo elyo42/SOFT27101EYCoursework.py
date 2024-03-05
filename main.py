@@ -6,7 +6,8 @@ from memberpage import Ui_MainWindowUser
 from managerpage import Ui_MainWindowManager
 from button_mappings import (projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL,
                              manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL,
-                             updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL)
+                             updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL,
+                             writeCommentSQL, commentsSQL)
 from classes import Project_Overview_Project, Project_Overview_Tasks
 
 
@@ -31,12 +32,15 @@ class AdminWindow(QMainWindow):
         self.ui.selectTaskTypeInput.currentIndexChanged.connect(self.updateTasksList)
         self.initTaskList()
         self.ui.openTaskList.currentItemChanged.connect(self.populateTaskDetails)
+        self.ui.openTaskList.currentItemChanged.connect(self.populateCommentBox)
         self.ui.openTaskCompletionChangeButton.clicked.connect(self.updateTaskCompletion)
         self.initTaskNewUserBox()
         self.ui.manageTaskNewUserButton.clicked.connect(self.updateTaskUser)
         self.ui.manageTaskDeadlineButton.clicked.connect(self.updateTaskDeadline)
         self.ui.currentTaskCloseButton.clicked.connect(self.closeTask)
         self.ui.currentTaskReopenButton.clicked.connect(self.reopenTask)
+        self.ui.sendCommentBetton.clicked.connect(self.writeComment)
+
 
 
 
@@ -201,6 +205,26 @@ class AdminWindow(QMainWindow):
         if selected_task:
             task_id = selected_task.text().split(' | ')[0].strip()
             reopenTaskSQL(task_id)
+
+    def writeComment(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = int(selected_task.text().split(' | ')[0].strip())
+            employee_id = self.employee_id
+            comment_text = self.ui.commentLineEdit.text()
+            writeCommentSQL(task_id, employee_id, comment_text)
+            self.ui.commentLineEdit.clear()
+            self.populateCommentBox()
+
+
+    def populateCommentBox(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = int(selected_task.text().split(' | ')[0].strip())
+            comments = commentsSQL(task_id)
+            self.ui.commentBox.clear()
+            for comment in comments:
+                self.ui.commentBox.append(comment.__str__())
 
 
 

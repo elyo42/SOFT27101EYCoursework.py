@@ -1,6 +1,6 @@
 import sqlite3
 from PyQt5.QtWidgets import QMessageBox
-from classes import Project_Overview_Project, Project_Overview_Tasks, Task_Details
+from classes import Project_Overview_Project, Project_Overview_Tasks, Task_Details, Comment
 import datetime
 
 def login(employee_id, password):
@@ -231,5 +231,24 @@ def reopenTaskSQL(task_id):
     conn.close()
     QMessageBox.information(None, None, "Task Reopened.")
 
-def writeComment():
-    pass
+def writeCommentSQL(task_id, employee_id, comment_text):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute('''INSERT INTO comment (task_id, employee_id, comment_text, date_time)
+                    VALUES(?,?,?,?)''', (task_id, employee_id, comment_text, current_date_time))
+    conn.commit()
+    conn.close()
+
+def commentsSQL(task_id):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('SELECT u.employee_name, c.comment_text, c.date_time FROM comment c INNER JOIN '
+                ' users u ON c.employee_id = u.employee_id WHERE c.task_id = ? order by cast(c.date_time as DATE) DESC', (task_id,))
+    rows = cur.fetchall()
+    conn.close()
+    comments = []
+    for row in rows:
+        comments.append(Comment(*row))
+    return comments
+
