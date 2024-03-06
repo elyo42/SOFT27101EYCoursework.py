@@ -272,3 +272,11 @@ def newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline):
                 VALUES(?,?,?,?,?,?,?)''', (project_id, employee_id, task_name, task_desc, 0, task_deadline, 1))
     conn.commit()
     conn.close()
+
+def newUserSQL(employee_id, employee_name, email, admin_flag):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('''INSERT INTO users (employee_id, employee_name, email, admin_flag, password)
+                    VALUES(?,?,?,?,?)''', (employee_id, employee_name, email, admin_flag, employee_id))
+    conn.commit()
+    conn.close()

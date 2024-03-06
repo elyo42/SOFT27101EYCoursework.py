@@ -7,7 +7,7 @@ from managerpage import Ui_MainWindowManager
 from button_mappings import (projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL,
                              manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL,
                              updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL,
-                             writeCommentSQL, commentsSQL, newProjectSQL, newTaskSQL)
+                             writeCommentSQL, commentsSQL, newProjectSQL, newTaskSQL, newUserSQL)
 from classes import Project_Overview_Project, Project_Overview_Tasks
 import datetime
 
@@ -45,6 +45,9 @@ class AdminWindow(QMainWindow):
         self.ui.newProjectSubmitButton.clicked.connect(self.createProject)
         self.initNewTaskProjectBox()
         self.initNewTaskEmployeeBox()
+        self.ui.newTaskSubmitButton.clicked.connect(self.createTask)
+        self.ui.newEmployeeSubmitButton.clicked.connect(self.createEmployee)
+
 
 
 
@@ -271,17 +274,33 @@ class AdminWindow(QMainWindow):
     def createTask(self):
         try:
             project_id = int(self.ui.newTaskProjectInput.currentText().split(' | ')[0].strip())
-            employee_id = int(self.ui.newTaskEmployeeInput.currentText().text().split(' | ')[0].strip())
+            employee_id = int(self.ui.newTaskEmployeeInput.currentText().split(' | ')[0].strip())
             task_name = self.ui.newTaskNameInput.text()
             task_desc = self.ui.newTaskDescInput.toPlainText()
             task_deadline = self.ui.newTaskDeadlineInput.date().toString('yyyy-MM-dd')
-            newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline)
-            QMessageBox.information(None, None, 'Project Created')
-            self.populateNewTaskProjectBox()
-            self.ui.newTaskNameInput.clear()
-            self.ui.newTaskDescInput.clear()
+            if task_name != '' or task_desc != '':
+                newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline)
+                QMessageBox.information(None, None, 'Project Created')
+                self.populateNewTaskProjectBox()
+                self.ui.newTaskNameInput.clear()
+                self.ui.newTaskDescInput.clear()
+            else:
+                QMessageBox.information(None, None, 'Task input invalid')
         except:
             QMessageBox.information(None, None, 'Task input invalid')
+
+    def createEmployee(self):
+        try:
+            employee_id = int(self.ui.newEmployeeIdInput.text())
+            user_name = self.ui.newEmployeeNameInput.text()
+            user_email = self.ui.newEmployeeEmailInput.text()
+            admin_flag = int(self.ui.radioButton.isChecked())
+            newUserSQL(employee_id, user_name, user_email, admin_flag)
+            QMessageBox.information(None, None, 'New user created')
+        except:
+            QMessageBox.information(None, None, 'Invalid input')
+
+
 
 
 
@@ -319,10 +338,11 @@ class LoginWindow(QMainWindow):
         username = self.ui.loginUsernameInput.text()
         password = self.ui.loginPasswordInput.text()
         user = login(username, password)
-        if user[2] == 1:
-            self.open_admin_page(user[0])
-        elif user[2] == 2:
-            self.open_user_page(user[0])
+        if user is not None:
+            if user[2] == 1:
+                self.open_admin_page(user[0])
+            elif user[2] == 0:
+                self.open_user_page(user[0])
         else:
             pass
 
