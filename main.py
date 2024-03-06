@@ -7,8 +7,9 @@ from managerpage import Ui_MainWindowManager
 from button_mappings import (projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL,
                              manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL,
                              updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL,
-                             writeCommentSQL, commentsSQL, newProjectSQL)
+                             writeCommentSQL, commentsSQL, newProjectSQL, newTaskSQL)
 from classes import Project_Overview_Project, Project_Overview_Tasks
+import datetime
 
 
 class AdminWindow(QMainWindow):
@@ -40,7 +41,11 @@ class AdminWindow(QMainWindow):
         self.ui.currentTaskCloseButton.clicked.connect(self.closeTask)
         self.ui.currentTaskReopenButton.clicked.connect(self.reopenTask)
         self.ui.sendCommentBetton.clicked.connect(self.writeComment)
+        self.ui.sendCommentBetton.clicked.connect(self.refreshCommentBox)
         self.ui.newProjectSubmitButton.clicked.connect(self.createProject)
+        self.initNewTaskProjectBox()
+        self.initNewTaskEmployeeBox()
+
 
 
 
@@ -57,7 +62,7 @@ class AdminWindow(QMainWindow):
         self.ui.projectList.clear()
 
         for project in projects:
-            self.ui.projectList.addItem(project[0])
+            self.ui.projectList.addItem(f'{project[1]} | {project[0]}')
     def updateProjectList(self):
         project_type = self.ui.projectTypeInput.currentText()
         self.populateProjectList(project_type)
@@ -65,9 +70,9 @@ class AdminWindow(QMainWindow):
 
     def populateProjectOverview(self, selected_project):
         if selected_project:
-            project_name = selected_project.text()
+            project_id = int(selected_project.text().split(' | ')[0].strip())
 
-            project_details = projectOverviewProjectDetailsSQL(project_name)
+            project_details = projectOverviewProjectDetailsSQL(project_id)
             self.ui.projectNameLabel1.setText(project_details.get_project_name())
             self.ui.projectDescriptionLabel.setText(project_details.get_project_description())
             self.ui.projectDeadlineLabel.setText(project_details.get_project_deadline())
@@ -75,7 +80,7 @@ class AdminWindow(QMainWindow):
             self.ui.manageProjectNameLabel.setText(project_details.get_project_name())
             self.ui.currentProjectDeadlinelabel.setText(project_details.get_project_deadline()) ###
 
-            tasks = projectOverviewTasksSQL(project_name)
+            tasks = projectOverviewTasksSQL(project_id)
             self.ui.projectOverviewTaskTable.setRowCount(len(tasks))
             for row, task in enumerate(tasks):
                 self.ui.projectOverviewTaskTable.setItem(row, 0, QTableWidgetItem(task.get_task_name()))
@@ -86,22 +91,22 @@ class AdminWindow(QMainWindow):
     def updateProjectDeadline(self):
         selected_project = self.ui.projectList.currentItem()
         if selected_project:
-            project_name = selected_project.text()
+            project_id = int(selected_project.text().split(' | ')[0].strip())
             selected_date = self.ui.currentProjectNewDeadlineInput.date().toString('yyyy-MM-dd')
-            manageProjectsSQL(project_name, selected_date)
+            manageProjectsSQL(project_id, selected_date)
 
 
     def closeProject(self):
         selected_project = self.ui.projectList.currentItem()
         if selected_project:
-            project_name = selected_project.text()
-            closeProjectsSQL(project_name)
+            project_id = int(selected_project.text().split(' | ')[0].strip())
+            closeProjectsSQL(project_id)
 
     def reopenProject(self):
         selected_project = self.ui.projectList.currentItem()
         if selected_project:
-            project_name = selected_project.text()
-            reopenProjectsSQL(project_name)
+            project_id = int(selected_project.text().split(' | ')[0].strip())
+            reopenProjectsSQL(project_id)
 
 
 
@@ -115,35 +120,35 @@ class AdminWindow(QMainWindow):
     def populateProjectsBox(self):
         projects = projectBoxSQL()
         self.ui.selectTaskProjectInput.clear()
-        self.ui.selectTaskProjectInput.addItem('All')
+        self.ui.selectTaskProjectInput.addItem('0 | All')
         for project in projects:
-            self.ui.selectTaskProjectInput.addItem(project[0])
+            self.ui.selectTaskProjectInput.addItem(f'{project[1]} | {project[0]}')
         self.ui.selectTaskProjectInput.setCurrentIndex(0)
 
 
     def populateEmployeeBox(self):
         employees = employeeBoxSQL()
         self.ui.selectTaskEmployeeInput.clear()
-        self.ui.selectTaskEmployeeInput.addItem('All')
+        self.ui.selectTaskEmployeeInput.addItem('0 | All')
         for employee in employees:
-            self.ui.selectTaskEmployeeInput.addItem(employee[0])
+            self.ui.selectTaskEmployeeInput.addItem(f'{employee[1]} | {employee[0]}')
         self.ui.selectTaskEmployeeInput.setCurrentIndex(0)
 
 
     def initTaskList(self):
-        self.populateTasksList('All','All','All')
+        self.populateTasksList('0','0','All')
         self.show()
-    def populateTasksList(self, project_name, employee_name, task_status):
-        tasks = taskListSQL(project_name, employee_name, task_status)
+    def populateTasksList(self, project_id, employee_id, task_status):
+        tasks = taskListSQL(project_id, employee_id, task_status)
         self.ui.openTaskList.clear()
         for task in tasks:
             self.ui.openTaskList.addItem(f'{task[1]} | {task[0]}')
 
     def updateTasksList(self):
-        project_name = self.ui.selectTaskProjectInput.currentText()
-        employee_name = self.ui.selectTaskEmployeeInput.currentText()
+        project_id = int(self.ui.selectTaskProjectInput.currentText().split(' | ')[0].strip())
+        employee_id = int(self.ui.selectTaskEmployeeInput.currentText().split(' | ')[0].strip())
         task_status = self.ui.selectTaskTypeInput.currentText()
-        self.populateTasksList(project_name, employee_name, task_status)
+        self.populateTasksList(project_id, employee_id, task_status)
 
     def populateTaskDetails(self,selected_task):
         if selected_task:
@@ -213,9 +218,11 @@ class AdminWindow(QMainWindow):
             task_id = int(selected_task.text().split(' | ')[0].strip())
             employee_id = self.employee_id
             comment_text = self.ui.commentLineEdit.text()
-            writeCommentSQL(task_id, employee_id, comment_text)
-            self.ui.commentLineEdit.clear()
-            self.populateCommentBox()
+            current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
+    def refreshCommentBox(self):
+        self.ui.commentLineEdit.clear
+        self.populateCommentBox()
 
 
     def populateCommentBox(self):
@@ -233,6 +240,48 @@ class AdminWindow(QMainWindow):
         project_deadline = self.ui.newProjectDeadlineInput.date().toString('yyyy-MM-dd')
         newProjectSQL(project_name, project_desc, project_deadline)
         QMessageBox.information(None, None, 'Project Created')
+        self.populateNewTaskProjectBox()
+        self.ui.newProjectNameInput.clear()
+        self.ui.newProjectDescInput.clear()
+
+    def initNewTaskProjectBox(self):
+        self.populateNewTaskProjectBox()
+        self.show()
+    def initNewTaskEmployeeBox(self):
+        self.populateNewTaskEmployeeBox()
+        self.show()
+
+    def populateNewTaskProjectBox(self):
+        projects = projectBoxSQL()
+        self.ui.newTaskProjectInput.clear()
+        self.ui.newTaskProjectInput.addItem('Select Project')
+        for project in projects:
+            self.ui.newTaskProjectInput.addItem(f'{project[1]} | {project[0]}')
+        self.ui.newTaskProjectInput.setCurrentIndex(0)
+
+
+    def populateNewTaskEmployeeBox(self):
+        employees = employeeBoxSQL()
+        self.ui.newTaskEmployeeInput.clear()
+        self.ui.newTaskEmployeeInput.addItem('Select User')
+        for employee in employees:
+            self.ui.newTaskEmployeeInput.addItem(f'{employee[1]} | {employee[0]}')
+        self.ui.newTaskEmployeeInput.setCurrentIndex(0)
+
+    def createTask(self):
+        try:
+            project_id = int(self.ui.newTaskProjectInput.currentText().split(' | ')[0].strip())
+            employee_id = int(self.ui.newTaskEmployeeInput.currentText().text().split(' | ')[0].strip())
+            task_name = self.ui.newTaskNameInput.text()
+            task_desc = self.ui.newTaskDescInput.toPlainText()
+            task_deadline = self.ui.newTaskDeadlineInput.date().toString('yyyy-MM-dd')
+            newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline)
+            QMessageBox.information(None, None, 'Project Created')
+            self.populateNewTaskProjectBox()
+            self.ui.newTaskNameInput.clear()
+            self.ui.newTaskDescInput.clear()
+        except:
+            QMessageBox.information(None, None, 'Task input invalid')
 
 
 

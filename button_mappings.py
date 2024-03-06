@@ -37,38 +37,38 @@ def projectListSQL(project_type):
     cur = conn.cursor()
 
     if project_type == 'All':
-        cur.execute('SELECT project_name from projects')
+        cur.execute('SELECT project_name, project_id from projects')
     elif project_type == 'Open':
-        cur.execute('SELECT project_name from projects WHERE project_status = 1')
+        cur.execute('SELECT project_name, project_id from projects WHERE project_status = 1')
     elif project_type == 'Outstanding':
         current_date = datetime.datetime.now().strftime("%Y-%m-%d")
-        cur.execute('SELECT project_name from projects p INNER JOIN task t on p.project_id = t.project_id '
+        cur.execute('SELECT project_name, p.project_id from projects p INNER JOIN task t on p.project_id = t.project_id '
                     'WHERE project_status = 1 GROUP BY 1 HAVING (AVG(task_completion) = 100 or CAST(project_deadline as DATE) < CAST(? as DATE) )', (current_date,))
     else:
-        cur.execute('SELECT project_name from projects WHERE project_status = 2')
+        cur.execute('SELECT project_name, project_id from projects WHERE project_status = 2')
     projects = cur.fetchall()
     conn.close()
     return projects
 
-def projectOverviewProjectDetailsSQL(project_name):
+def projectOverviewProjectDetailsSQL(project_id):
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('SELECT project_name, project_desc, project_deadline, AVG(task_completion) FROM projects p '
-                'INNER JOIN task t on p.project_id = t.project_id WHERE project_name = ? GROUP BY 1,2,3', (project_name,))
+                'INNER JOIN task t on p.project_id = t.project_id WHERE p.project_id = ? GROUP BY 1,2,3', (project_id,))
     project_details = cur.fetchone()
     if project_details is not None:
         project = Project_Overview_Project(*project_details)
     else:
-        cur.execute('SELECT project_name, project_desc, project_deadline,0 FROM projects where project_name = ?', (project_name,))
+        cur.execute('SELECT project_name, project_desc, project_deadline,0 FROM projects where project_id = ?', (project_id,))
         project = Project_Overview_Project(*cur.fetchone())
 
     return project
 
-def projectOverviewTasksSQL(project_name):
+def projectOverviewTasksSQL(project_id):
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    cur.execute('SELECT t.task_name, employee_name, t.task_deadline, t.task_completion FROM projects AS p INNER JOIN task as t ON p.project_id = t.project_id '
-                'Inner JOIN users AS u on t.employee_id = u.employee_id WHERE p.project_name = ?', (project_name,))
+    cur.execute('SELECT t.task_name, employee_name, t.task_deadline, t.task_completion FROM task as t '
+                'Inner JOIN users AS u on t.employee_id = u.employee_id WHERE t.project_id = ?', (project_id,))
     rows = cur.fetchall()
     tasks = []
     for row in rows:
@@ -77,26 +77,26 @@ def projectOverviewTasksSQL(project_name):
     conn.close()
     return tasks
 
-def manageProjectsSQL(project_name, new_deadline):
+def manageProjectsSQL(project_id, new_deadline):
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    cur.execute('UPDATE projects SET project_deadline = ? WHERE project_name = ?', (new_deadline, project_name))
+    cur.execute('UPDATE projects SET project_deadline = ? WHERE project_id = ?', (new_deadline, project_id))
     conn.commit()
     conn.close()
     QMessageBox.information(None, None, "Project Deadline Updated.")
 
-def closeProjectsSQL(project_name):
+def closeProjectsSQL(project_id):
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    cur.execute('UPDATE projects SET project_status = 2 WHERE project_name = ?', (project_name,))
+    cur.execute('UPDATE projects SET project_status = 2 WHERE project_id = ?', (project_id,))
     conn.commit()
     conn.close()
     QMessageBox.information(None, None, "Project Closed.")
 
-def reopenProjectsSQL(project_name):
+def reopenProjectsSQL(project_id):
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    cur.execute('UPDATE projects SET project_status = 1 WHERE project_name = ?', (project_name,))
+    cur.execute('UPDATE projects SET project_status = 1 WHERE project_id = ?', (project_id,))
     conn.commit()
     conn.close()
     QMessageBox.information(None, None, "Project Reopened.")
@@ -104,7 +104,7 @@ def reopenProjectsSQL(project_name):
 def projectBoxSQL():
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    cur.execute('SELECT project_name FROM projects')
+    cur.execute('SELECT project_name, project_id FROM projects')
     projects = cur.fetchall()
     conn.close()
     return projects
@@ -112,16 +112,16 @@ def projectBoxSQL():
 def employeeBoxSQL():
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    cur.execute('SELECT employee_name FROM users')
+    cur.execute('SELECT employee_name, employee_id FROM users')
     employees = cur.fetchall()
     conn.close()
     return employees
 
-def taskListSQL(project_name, employee_name, task_status):
+def taskListSQL(project_id, employee_id, task_status):
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    if project_name == 'All':
-        if employee_name == 'All':
+    if project_id == '0':
+        if employee_id == '0':
             if task_status == 'All':
                 cur.execute('SELECT task_name, task_id FROM task')
             elif task_status == 'Open':
@@ -135,51 +135,51 @@ def taskListSQL(project_name, employee_name, task_status):
         else:
             if task_status == 'All':
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN users u ON t.employee_id = u.employee_id '
-                            'WHERE u.employee_name = ?', (employee_name,))
+                            'WHERE u.employee_id = ?', (employee_id,))
             elif task_status == 'Open':
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN users u ON t.employee_id = u.employee_id '
-                            'WHERE t.task_status = 1 AND u.employee_name = ?', (employee_name,))
+                            'WHERE t.task_status = 1 AND u.employee_id = ?', (employee_id,))
             elif task_status == 'Outstanding':
                 current_date = datetime.datetime.now().strftime("%Y-%m-%d")
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN users u ON t.employee_id = u.employee_id '
                             'WHERE task_status = 1 and (task_completion = "100" OR CAST(task_deadline as DATE) < CAST(? as date))'
-                            ' AND u.employee_name = ?', (current_date, employee_name))
+                            ' AND u.employee_id = ?', (current_date, employee_id))
             else:
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN users u ON t.employee_id = u.employee_id '
-                            'WHERE task_status = 2 AND u.employee_name = ?', (employee_name,))
+                            'WHERE task_status = 2 AND u.employee_id = ?', (employee_id,))
     else:
-        if employee_name == 'All':
+        if employee_id == '0':
             if task_status == 'All':
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN projects p ON t.project_id = p.project_id '
-                            'WHERE p.project_name = ?', (project_name,))
+                            'WHERE p.project_id = ?', (project_id,))
             elif task_status == 'Open':
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN projects p ON t.project_id = p.project_id '
-                            'WHERE t.task_status = 1 AND p.project_name = ?', (project_name,))
+                            'WHERE t.task_status = 1 AND p.project_id = ?', (project_id,))
             elif task_status == 'Outstanding':
                 current_date = datetime.datetime.now().strftime("%Y-%m-%d")
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN projects p ON t.project_id = p.project_id '
                             'WHERE task_status = 1 and (task_completion = "100" OR CAST(task_deadline as DATE) < CAST(? as date))'
-                            ' AND p.project_name = ?', (current_date, project_name))
+                            ' AND p.project_id = ?', (current_date, project_id))
             else:
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN projects p ON t.project_id = p.project_id '
-                            'WHERE task_status = 2 AND p.project_name = ?', (project_name,))
+                            'WHERE task_status = 2 AND p.project_id = ?', (project_id,))
         else:
             if task_status == 'All':
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN users u ON t.employee_id = u.employee_id '
-                            'INNER JOIN projects p ON t.project_id = p.project_id WHERE u.employee_name = ? and p.project_name = ?', (employee_name, project_name))
+                            'INNER JOIN projects p ON t.project_id = p.project_id WHERE u.employee_id = ? and p.project_id = ?', (employee_id, project_id))
             elif task_status == 'Open':
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN users u ON t.employee_id = u.employee_id '
-                            'INNER JOIN projects p ON t.project_id = p.project_id WHERE t.task_status = 1 AND u.employee_name = ? '
-                            'and p.project_name = ?', (employee_name,project_name))
+                            'INNER JOIN projects p ON t.project_id = p.project_id WHERE t.task_status = 1 AND u.employee_id = ? '
+                            'and p.project_id = ?', (employee_id,project_id))
             elif task_status == 'Outstanding':
                 current_date = datetime.datetime.now().strftime("%Y-%m-%d")
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN users u ON t.employee_id = u.employee_id '
                             'INNER JOIN projects p ON t.project_id = p.project_id WHERE task_status = 1 and (task_completion = "100" OR CAST(task_deadline as DATE) < CAST(? as date))'
-                            ' AND u.employee_name = ? and p.project_name = ?', (current_date, employee_name, project_name))
+                            ' AND u.employee_id = ? and p.project_id = ?', (current_date, employee_id, project_id))
             else:
                 cur.execute('SELECT t.task_name, t.task_id FROM task t INNER JOIN users u ON t.employee_id = u.employee_id '
-                            'INNER JOIN projects p ON t.project_id = p.project_id WHERE task_status = 2 AND u.employee_name = ? '
-                            'and p.project_name = ?', (employee_name,project_name))
+                            'INNER JOIN projects p ON t.project_id = p.project_id WHERE task_status = 2 AND u.employee_id = ? '
+                            'and p.project_id = ?', (employee_id,project_id))
     tasks = cur.fetchall()
     conn.close()
     return tasks
@@ -236,10 +236,10 @@ def reopenTaskSQL(task_id):
     conn.close()
     QMessageBox.information(None, None, "Task Reopened.")
 
-def writeCommentSQL(task_id, employee_id, comment_text):
+def writeCommentSQL(task_id, employee_id, comment_text, current_date_time):
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
-    current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     cur.execute('''INSERT INTO comment (task_id, employee_id, comment_text, date_time)
                     VALUES(?,?,?,?)''', (task_id, employee_id, comment_text, current_date_time))
     conn.commit()
@@ -265,3 +265,10 @@ def newProjectSQL(project_name, project_desc, project_deadline):
     conn.commit()
     conn.close()
 
+def newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('''INSERT INTO task (project_id, employee_id, task_name, task_desc, task_completion, task_deadline, task_status)
+                VALUES(?,?,?,?,?,?,?)''', (project_id, employee_id, task_name, task_desc, 0, task_deadline, 1))
+    conn.commit()
+    conn.close()
