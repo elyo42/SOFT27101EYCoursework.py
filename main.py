@@ -8,7 +8,7 @@ from button_mappings import (projectBoxSQL, login, projectListSQL, projectOvervi
                              manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL,
                              updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL,
                              writeCommentSQL, commentsSQL, newProjectSQL, newTaskSQL, newUserSQL, changeUserPrivilegeSQL
-                              ,resetPasswordSQL, deleteUserSQL, homePageManagerSQL, taskOwnerSQL)
+                              ,resetPasswordSQL, deleteUserSQL, homePageManagerSQL, taskOwnerSQL, homePageUserSQL)
 from classes import Project_Overview_Project, Project_Overview_Tasks
 import datetime
 
@@ -518,34 +518,40 @@ class UserWindow(QMainWindow):
             self.ui.openTaskDeadline.setText(task_details.get_task_deadline())
             self.ui.openTaskCompletionLabel.setText(task_details.get_task_completion())
             self.ui.openTaskTitleLabel2.setText(task_details.get_task_name())
-            self.ui.currentTaskHeaderLabel.setText(task_details.get_task_name())
             self.ui.openTaskOwnerLabel.setText(task_owner)
 
+
     def updateTaskCompletion(self):
-        selected_task = self.ui.openTaskList.currentItem()
-        if selected_task:
-            task_id = int(selected_task.text().split(' | ')[0].strip())
-            new_completion_text = self.ui.openTaskCompletionChangeBox.text()
-            try:
-                new_completion = int(new_completion_text)
-                if 0 <= new_completion <= 100:
-                    updateTaskCompletionSQL(task_id, new_completion)
-                    self.ui.openTaskCompletionLabel.setText(new_completion)
-                    self.systemComment(task_id, f'Task completion set at {new_completion}')
-                    QMessageBox.information(None, None, "Completion Set.")
-                else:
-                    QMessageBox.information(None, None, "Please enter a valid percent (0-100).")
-            except ValueError:
-                QMessageBox.information(None, None, "Please enter a valid integer.")
+        if int(self.ui.openTaskOwnerLabel.text().split(' | ')[0].strip()) == self.employee_id:
+            selected_task = self.ui.openTaskList.currentItem()
+            if selected_task:
+                task_id = int(selected_task.text().split(' | ')[0].strip())
+                new_completion_text = self.ui.openTaskCompletionChangeBox.text()
+                try:
+                    new_completion = int(new_completion_text)
+                    if 0 <= new_completion <= 100:
+                        updateTaskCompletionSQL(task_id, new_completion)
+                        self.ui.openTaskCompletionLabel.setText(str(new_completion))
+                        self.systemComment(task_id, f'Task completion set at {new_completion}')
+                        QMessageBox.information(None, None, "Completion Set.")
+                    else:
+                        QMessageBox.information(None, None, "Please enter a valid percent (0-100).")
+                except ValueError:
+                    QMessageBox.information(None, None, "Please enter a valid integer.")
+        else:
+            QMessageBox.information(None, None, "You can't edit this task.")
 
     def writeComment(self):
-        selected_task = self.ui.openTaskList.currentItem()
-        if selected_task:
-            task_id = int(selected_task.text().split(' | ')[0].strip())
-            employee_id = self.employee_id
-            comment_text = self.ui.commentLineEdit.text()
-            current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
+        if int(self.ui.openTaskOwnerLabel.text().split(' | ')[0].strip()) == self.employee_id:
+            selected_task = self.ui.openTaskList.currentItem()
+            if selected_task:
+                task_id = int(selected_task.text().split(' | ')[0].strip())
+                employee_id = self.employee_id
+                comment_text = self.ui.commentLineEdit.text()
+                current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
+        else:
+            QMessageBox.information(None, None, "You can't comment on this task.")
 
     def refreshCommentBox(self):
         self.ui.commentLineEdit.clear
@@ -568,14 +574,12 @@ class UserWindow(QMainWindow):
 
     def setHomeDetails(self):
         employee_id = self.employee_id
-        details = homePageManagerSQL(employee_id)
+        details = homePageUserSQL(employee_id)
         self.ui.homeWelcomeLabel.setText(f'Welcome {details.get_employee_name()}!')
-        self.ui.overdueProjectsLabel.setText(f'There are {details.get_overdue_project_count()} overdue projects.')
-        self.ui.overdueTasksLabel.setText(f'There are {details.get_overdue_task_count()} overdue tasks.')
-        self.ui.approvalProjectLabel.setText(f'There are {details.get_approval_project_count()} projects waiting for '
-                                             f'approval before closure')
-        self.ui.approvalProjectsLabel.setText(f'There are {details.get_approval_task_count()} tasks waiting for '
-                                              f'approval before closure')
+        self.ui.projectLabel.setText(f'You are currently assigned to {details.get_project_count()} open projects.')
+        self.ui.taskLabel.setText(f'You currently have {details.get_task_count()} open tasks.')
+        self.ui.overdueTasksLabel.setText(f'You currently have {details.get_overdue_task_count()} overdue tasks')
+
 
     def changeOwnPassword(self):
         check1 = self.ui.changePasswordInput1.text()

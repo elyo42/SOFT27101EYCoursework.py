@@ -1,4 +1,5 @@
 import sqlite3
+from button_mappings import hash_password
 
 conn = sqlite3.connect('projectManagement.db')
 
@@ -71,13 +72,15 @@ def insert_into_comment(task_id, employee_id, comment_text, date_time):
 def insert_into_user(employee_id, employee_name, email, admin_flag, password):
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
+    hashed_password = hash_password(password)
     cur.execute('''INSERT INTO users (employee_id, employee_name, email, admin_flag, password)
-                    VALUES(?,?,?,?,?)''', (employee_id, employee_name, email, admin_flag, password))
+                    VALUES(?,?,?,?,?)''', (employee_id, employee_name, email, admin_flag, hashed_password))
     conn.commit()
     conn.close()
 
-insert_into_user('0','System','',1,'')
-
+# insert_into_user('01290103','Elliot York','elliotyork@outlook.com',1,'password1')
+# insert_into_user('0','System','',1,'')
+#
 # for i in range(1, 6):
 #     insert_into_user(i, f'User_{i}', f'user{i}@example.com', 0, f'password{i}')
 #

@@ -70,4 +70,18 @@ class HomePageManager:
     def get_approval_project_count(self):
         return self.approval_project_count
 
+class HomePageUser:
+    def __init__(self, employee_name, task_count, project_count, overdue_task_count):
+        self.employee_name = employee_name
+        self.task_count = task_count
+        self.project_count = project_count
+        self.overdue_task_count = overdue_task_count
+    def get_employee_name(self):
+        return self.employee_name
+    def get_task_count(self):
+        return self.task_count
+    def get_project_count(self):
+        return self.project_count
+    def get_overdue_task_count(self):
+        return self.overdue_task_count
 

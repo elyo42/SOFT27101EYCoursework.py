@@ -1,15 +1,22 @@
 import sqlite3
 from PyQt5.QtWidgets import QMessageBox
-from classes import Project_Overview_Project, Project_Overview_Tasks, Task_Details, Comment, HomePageManager
+from classes import Project_Overview_Project, Project_Overview_Tasks, Task_Details, Comment, HomePageManager, HomePageUser
 import datetime
+import hashlib
+
+
+
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 def login(employee_id, password):
     # Connect to the SQLite database
     conn = sqlite3.connect('projectmanagement.db')
     cursor = conn.cursor()
-
+    hashed_password = hash_password(password)
     # Query the database for the provided username and password
-    cursor.execute("SELECT employee_id, password, admin_flag FROM users WHERE employee_id=? AND password=?", (employee_id, password))
+    cursor.execute("SELECT employee_id, password, admin_flag FROM users WHERE employee_id=? AND password=?", (employee_id, hashed_password))
     user = cursor.fetchone()
 
     # Close the database connection
@@ -282,8 +289,9 @@ def newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline):
 def newUserSQL(employee_id, employee_name, email, admin_flag):
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
+    hashed_password = hash_password(employee_id)
     cur.execute('''INSERT INTO users (employee_id, employee_name, email, admin_flag, password)
-                    VALUES(?,?,?,?,?)''', (employee_id, employee_name, email, admin_flag, employee_id))
+                    VALUES(?,?,?,?,?)''', (employee_id, employee_name, email, admin_flag, hashed_password))
     conn.commit()
     conn.close()
 
@@ -296,7 +304,8 @@ def changeUserPrivilegeSQL(employee_id, admin_flag):
 def resetPasswordSQL(employee_id, password):
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
-    cur.execute('UPDATE users SET password = ? WHERE employee_id = ?', (password, employee_id))
+    hashed_password = hash_password(password)
+    cur.execute('UPDATE users SET password = ? WHERE employee_id = ?', (hashed_password, employee_id))
     conn.commit()
     conn.close()
 def deleteUserSQL(employee_id, admin_id):
@@ -318,17 +327,36 @@ def homePageManagerSQL(employee_id):
     overdue = cur.fetchone()
     cur.execute('SELECT count(distinct task_id), count(distinct project_id) FROM task WHERE task_status = 1 and '
                 'task_completion = "100"')
-    approval = cur.fetchone()
+    approval_task = cur.fetchone()
+    cur.execute('SELECT count(distinct project_id) FROM task WHERE task_status = 1 having avg(task_completion) = "100" ')
+    approval_project = cur.fetchone()
+    if approval_project is None:
+        approval_project = (0,)
 
-    homePageDetails = HomePageManager(employee_name[0], overdue[0], overdue[1], approval[0], approval[1])
+    homePageDetails = HomePageManager(employee_name[0], overdue[0], overdue[1], approval_task[0], approval_project[0])
     conn.close()
     return homePageDetails
 
 def taskOwnerSQL(task_id):
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
-    cur.execute('SELECT employee_name FROM users u INNER JOIN task t on u.employee_id = t.employee_id '
+    cur.execute('SELECT employee_name, u.employee_id FROM users u INNER JOIN task t on u.employee_id = t.employee_id '
                 'WHERE task_id = ?', (task_id,))
-    task_owner = cur.fetchone()[0]
+    task_user = cur.fetchone()
     conn.close()
+    task_owner = f'{task_user[1]} | {task_user[0]}'
     return task_owner
+
+def homePageUserSQL(employee_id):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('SELECT u.employee_name, count(distinct t.task_id), count(distinct project_id) FROM task t INNER JOIN '
+                'users u ON u.employee_id = t.employee_id WHERE task_status = 1 and t.employee_id = ?', (employee_id,))
+    details1 = cur.fetchone()
+    current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    cur.execute('SELECT count(distinct task_id) from task WHERE task_status = 1 and cast(task_deadline as date) < cast(? as date) '
+                'and employee_id = ?', (current_date,employee_id))
+    overdue = cur.fetchone()
+    conn.close()
+    home_details = HomePageUser(details1[0],details1[1],details1[2],overdue[0])
+    return home_details
