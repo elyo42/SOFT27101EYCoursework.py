@@ -56,7 +56,12 @@ def projectOverviewProjectDetailsSQL(project_name):
     cur.execute('SELECT project_name, project_desc, project_deadline, AVG(task_completion) FROM projects p '
                 'INNER JOIN task t on p.project_id = t.project_id WHERE project_name = ? GROUP BY 1,2,3', (project_name,))
     project_details = cur.fetchone()
-    project = Project_Overview_Project(*project_details)
+    if project_details is not None:
+        project = Project_Overview_Project(*project_details)
+    else:
+        cur.execute('SELECT project_name, project_desc, project_deadline,0 FROM projects where project_name = ?', (project_name,))
+        project = Project_Overview_Project(*cur.fetchone())
+
     return project
 
 def projectOverviewTasksSQL(project_name):
@@ -251,4 +256,12 @@ def commentsSQL(task_id):
     for row in rows:
         comments.append(Comment(*row))
     return comments
+
+def newProjectSQL(project_name, project_desc, project_deadline):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('''INSERT INTO projects (project_name, project_desc, project_deadline, project_status)
+                    VALUES(?,?,?,?)''', (project_name, project_desc, project_deadline, 1))
+    conn.commit()
+    conn.close()
 

@@ -7,7 +7,7 @@ from managerpage import Ui_MainWindowManager
 from button_mappings import (projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL,
                              manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL,
                              updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL,
-                             writeCommentSQL, commentsSQL)
+                             writeCommentSQL, commentsSQL, newProjectSQL)
 from classes import Project_Overview_Project, Project_Overview_Tasks
 
 
@@ -40,6 +40,7 @@ class AdminWindow(QMainWindow):
         self.ui.currentTaskCloseButton.clicked.connect(self.closeTask)
         self.ui.currentTaskReopenButton.clicked.connect(self.reopenTask)
         self.ui.sendCommentBetton.clicked.connect(self.writeComment)
+        self.ui.newProjectSubmitButton.clicked.connect(self.createProject)
 
 
 
@@ -225,6 +226,14 @@ class AdminWindow(QMainWindow):
             self.ui.commentBox.clear()
             for comment in comments:
                 self.ui.commentBox.append(comment.__str__())
+
+    def createProject(self):
+        project_name = self.ui.newProjectNameInput.text()
+        project_desc = self.ui.newProjectDescInput.toPlainText()
+        project_deadline = self.ui.newProjectDeadlineInput.date().toString('yyyy-MM-dd')
+        newProjectSQL(project_name, project_desc, project_deadline)
+        QMessageBox.information(None, None, 'Project Created')
+
 
 
 
