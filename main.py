@@ -8,7 +8,8 @@ from button_mappings import (projectBoxSQL, login, projectListSQL, projectOvervi
                              manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL,
                              updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL,
                              writeCommentSQL, commentsSQL, newProjectSQL, newTaskSQL, newUserSQL, changeUserPrivilegeSQL
-                              ,resetPasswordSQL, deleteUserSQL, homePageManagerSQL, taskOwnerSQL, homePageUserSQL)
+                              ,resetPasswordSQL, deleteUserSQL, homePageManagerSQL, taskOwnerSQL, homePageUserSQL, getUserEmailTaskSQL
+                             , getUserEmailProjectSQL)
 from classes import Project_Overview_Project, Project_Overview_Tasks
 import datetime
 
@@ -54,6 +55,7 @@ class AdminWindow(QMainWindow):
         self.ui.deleteUserButton.clicked.connect(self.deleteUser)
         self.ui.changePasswordButton.clicked.connect(self.changeOwnPassword)
         self.setHomeDetails()
+        self.ui.chaseUpdateButton.clicked.connect(self.chaseUpdateRequest)
 
 
 
@@ -115,7 +117,13 @@ class AdminWindow(QMainWindow):
         if selected_project:
             project_id = int(selected_project.text().split(' | ')[0].strip())
             closeProjectsSQL(project_id)
+            email = getUserEmailProjectSQL(project_id)
+            with open('email_template.txt', 'w') as file:
+                for i in email:
+                    file.write(f'To - {i[0]}\n From - system@ttcorp.com\n Subject - Task Closed\n Body - Hello {i[1]}\n '
+                               f'The following task has been closed ({selected_project.text()}). \n\nThank you for you hard work.')
             self.updateProjectList()
+            QMessageBox.information(None, None, 'Project Closed')
 
     def reopenProject(self):
         selected_project = self.ui.projectList.currentItem()
@@ -123,6 +131,7 @@ class AdminWindow(QMainWindow):
             project_id = int(selected_project.text().split(' | ')[0].strip())
             reopenProjectsSQL(project_id)
             self.updateProjectList()
+            QMessageBox.information(None, None, 'Project Reopened')
 
 
 
@@ -178,6 +187,7 @@ class AdminWindow(QMainWindow):
             self.ui.openTaskTitleLabel2.setText(task_details.get_task_name())
             self.ui.currentTaskHeaderLabel.setText(task_details.get_task_name())
             self.ui.openTaskOwnerLabel.setText(task_owner)
+
     def updateTaskCompletion(self):
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
@@ -194,6 +204,18 @@ class AdminWindow(QMainWindow):
                     QMessageBox.information(None, None, "Please enter a valid percent (0-100).")
             except ValueError:
                 QMessageBox.information(None, None, "Please enter a valid integer.")
+
+    def chaseUpdateRequest(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            employee_id = int(self.ui.openTaskOwnerLabel.text().split(' | ')[0].strip())
+            email = getUserEmailTaskSQL(employee_id)
+            with open('email_template.txt', 'w') as file:
+                file.write(f'To - {email[0]}\n From - system@ttcorp.com\n Subject - Update Request\n Body - Hello {email[1]}\n'
+                           f'Please provide an update for the following task ({selected_task.text()}).'
+                           f' \n\nThank you.')
+            QMessageBox.information(None, None, "Request sent.")
+
 
 
     def initTaskNewUserBox(self):
@@ -216,20 +238,32 @@ class AdminWindow(QMainWindow):
             self.ui.openTaskDeadline.setText(selected_date)
             self.systemComment(task_id,f'Task Deadline changed to {selected_date}')
             QMessageBox.information(None, None, 'New Deadline Set')
+
     def updateTaskUser(self):
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = selected_task.text().split(' | ')[0].strip()
             selected_user = self.ui.currentTaskNewEmployeeInput.currentText()
-            updateTaskUserSQL(task_id, selected_user)
+            employee_id = updateTaskUserSQL(task_id, selected_user)
+            email = getUserEmailTaskSQL(employee_id)
             self.updateTasksList()
             self.systemComment(task_id,f'Task Owner changed to {selected_user}')
+            with open('email_template.txt', 'w') as file:
+                file.write(f'To - {email[0]}\n From - system@ttcorp.com\n Subject - Task Assigned\n Body - Hello {email[1]}'
+                           f'The following task has been assigned to you - ({selected_task.text()}). '
+                           f'\n\nPlease log in for more details.')
             QMessageBox.information(None, None, 'New User Set')
+
     def closeTask(self):
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = selected_task.text().split(' | ')[0].strip()
             closeTaskSQL(task_id)
+            employee_id = int(self.ui.openTaskOwnerLabel.text().split(' | ')[0].strip())
+            email = getUserEmailTaskSQL(employee_id)
+            with open('email_template.txt', 'w') as file:
+                file.write(f'To - {email[0]}\n From - system@ttcorp.com\n Subject - Task Closed\n Body - Hello {email[1]}'
+                           f'The following task has been closed ({selected_task.text()}). \n\nThank you for you hard work.')
             self.updateTasksList()
             self.systemComment(task_id,f'Task Closed by user {self.employee_id}')
             QMessageBox.information(None, None, 'Task Closed')
@@ -252,9 +286,11 @@ class AdminWindow(QMainWindow):
             comment_text = self.ui.commentLineEdit.text()
             current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
+
     def refreshCommentBox(self):
         self.ui.commentLineEdit.clear
         self.populateCommentBox()
+
     def systemComment(self, task_id, comment_text):
         employee_id = 0
         current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -320,11 +356,16 @@ class AdminWindow(QMainWindow):
             if task_name != '' or task_desc != '':
                 new_task_id = newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline)
                 QMessageBox.information(None, None, 'Project Created')
+                email = getUserEmailTaskSQL(employee_id)
                 self.populateNewTaskProjectBox()
                 self.ui.newTaskNameInput.clear()
                 self.ui.newTaskDescInput.clear()
                 self.updateTasksList()
                 self.systemComment(new_task_id, f'Task created by user {self.employee_id}')
+                with open('email_template.txt', 'w') as file:
+                    file.write(
+                        f'To - {email[0]}\n From - system@ttcorp.com\n Subject - New Task\n Body - Hello {email[1]}'
+                        f'The following task has been assigned to you - ({task_name}). \n\nPlease log in for more details.')
 
             else:
                 QMessageBox.information(None, None, 'Task input invalid')
@@ -339,6 +380,10 @@ class AdminWindow(QMainWindow):
             admin_flag = int(self.ui.radioButton.isChecked())
             newUserSQL(employee_id, user_name, user_email, admin_flag)
             QMessageBox.information(None, None, 'New user created')
+            with open('email_template.txt', 'w') as file:
+                file.write(f'To - {user_email}\n From - system@ttcorp.com\n Subject - Welcome\n Body - Hello {user_name}'
+                           f'\nYour profile has been created. Your username and password are set as your employee number'
+                           f' {employee_id}. Please log in and change your password.')
             self.populateNewTaskEmployeeBox()
             self.populateEmployeeBox()
             self.populateManageEmployeeBox()
@@ -381,6 +426,7 @@ class AdminWindow(QMainWindow):
         self.populateNewTaskEmployeeBox()
         self.populateEmployeeBox()
         self.populateManageEmployeeBox()
+
     def setHomeDetails(self):
         employee_id = self.employee_id
         details = homePageManagerSQL(employee_id)

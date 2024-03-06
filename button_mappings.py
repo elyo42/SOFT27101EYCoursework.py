@@ -226,6 +226,7 @@ def updateTaskUserSQL(task_id, new_user):
     cur.execute('UPDATE task SET employee_id = ? WHERE task_id = ?', (employee, task_id))
     conn.commit()
     conn.close()
+    return employee
 
 
 
@@ -360,3 +361,21 @@ def homePageUserSQL(employee_id):
     conn.close()
     home_details = HomePageUser(details1[0],details1[1],details1[2],overdue[0])
     return home_details
+def getUserEmailTaskSQL(employee_id):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('SELECT email, employee_name FROM users WHERE employee_id = ?', (employee_id,))
+    email = cur.fetchone()
+    conn.close()
+    return email
+
+def getUserEmailProjectSQL(project_id):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('SELECT email, employee_name FROM users WHERE employee_id IN (SELECT distinct employee_id FROM task '
+                'Where project_id = ?)', (project_id,))
+    email = cur.fetchall()
+    conn.close()
+    return email
+print(getUserEmailProjectSQL(1))
+
