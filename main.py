@@ -8,7 +8,7 @@ from button_mappings import (projectBoxSQL, login, projectListSQL, projectOvervi
                              manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL,
                              updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL,
                              writeCommentSQL, commentsSQL, newProjectSQL, newTaskSQL, newUserSQL, changeUserPrivilegeSQL
-                              ,resetPasswordSQL, deleteUserSQL)
+                              ,resetPasswordSQL, deleteUserSQL, homePageManagerSQL, taskOwnerSQL)
 from classes import Project_Overview_Project, Project_Overview_Tasks
 import datetime
 
@@ -53,6 +53,7 @@ class AdminWindow(QMainWindow):
         self.ui.resetPasswordButton.clicked.connect(self.resetUserPassword)
         self.ui.deleteUserButton.clicked.connect(self.deleteUser)
         self.ui.changePasswordButton.clicked.connect(self.changeOwnPassword)
+        self.setHomeDetails()
 
 
 
@@ -169,13 +170,14 @@ class AdminWindow(QMainWindow):
         if selected_task:
             task_id = int(selected_task.text().split(' | ')[0].strip())
             task_details = taskDetailsSQL(task_id)
+            task_owner = taskOwnerSQL(task_id)
             self.ui.openTaskTitleLabel1.setText(task_details.get_task_name())
             self.ui.taskDescLabel.setText(task_details.get_task_desc())
             self.ui.openTaskDeadline.setText(task_details.get_task_deadline())
             self.ui.openTaskCompletionLabel.setText(task_details.get_task_completion())
             self.ui.openTaskTitleLabel2.setText(task_details.get_task_name())
             self.ui.currentTaskHeaderLabel.setText(task_details.get_task_name())
-
+            self.ui.openTaskOwnerLabel.setText(task_owner)
     def updateTaskCompletion(self):
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
@@ -379,11 +381,16 @@ class AdminWindow(QMainWindow):
         self.populateNewTaskEmployeeBox()
         self.populateEmployeeBox()
         self.populateManageEmployeeBox()
-
-
-
-
-
+    def setHomeDetails(self):
+        employee_id = self.employee_id
+        details = homePageManagerSQL(employee_id)
+        self.ui.homeWelcomeLabel.setText(f'Welcome {details.get_employee_name()}!')
+        self.ui.overdueProjectsLabel.setText(f'There are {details.get_overdue_project_count()} overdue projects.')
+        self.ui.overdueTasksLabel.setText(f'There are {details.get_overdue_task_count()} overdue tasks.')
+        self.ui.approvalProjectLabel.setText(f'There are {details.get_approval_project_count()} projects waiting for '
+                                             f'approval before closure')
+        self.ui.approvalProjectsLabel.setText(f'There are {details.get_approval_task_count()} tasks waiting for '
+                                              f'approval before closure')
 
     def changeOwnPassword(self):
         check1 = self.ui.changePasswordInput1.text()
@@ -394,14 +401,14 @@ class AdminWindow(QMainWindow):
         else:
             QMessageBox.information(None, None, 'Please enter valid password')
 
-
-
-
-
     def open_login_page(self):
         self.login_page = LoginWindow()
         self.login_page.show()
         self.close()
+
+
+
+
 
 class UserWindow(QMainWindow):
     def __init__(self, employee_id):
@@ -411,7 +418,173 @@ class UserWindow(QMainWindow):
         self.ui.setupUi(self)
 
         self.ui.logoutButton.clicked.connect(self.open_login_page)
+        self.ui.projectTypeInput.currentIndexChanged.connect(self.updateProjectList)
+        self.initProjectList()
+        self.ui.projectList.currentItemChanged.connect(self.populateProjectOverview)
+        self.initProjectsBox()
+        self.initEmployeeBox()
+        self.ui.selectTaskProjectInput.currentIndexChanged.connect(self.updateTasksList)
+        self.ui.selectTaskEmployeeInput.currentIndexChanged.connect(self.updateTasksList)
+        self.ui.selectTaskTypeInput.currentIndexChanged.connect(self.updateTasksList)
+        self.initTaskList()
+        self.ui.openTaskList.currentItemChanged.connect(self.populateTaskDetails)
+        self.ui.openTaskList.currentItemChanged.connect(self.populateCommentBox)
+        self.ui.openTaskCompletionChangeButton.clicked.connect(self.updateTaskCompletion)
+        self.ui.sendCommentBetton.clicked.connect(self.writeComment)
+        self.ui.sendCommentBetton.clicked.connect(self.refreshCommentBox)
+        self.ui.changePasswordButton.clicked.connect(self.changeOwnPassword)
+        self.setHomeDetails()
 
+    def initProjectList(self):
+        self.populateProjectList('All')
+        self.show()
+
+    def populateProjectList(self, project_type):
+        projects = projectListSQL(project_type)
+        self.ui.projectList.clear()
+
+        for project in projects:
+            self.ui.projectList.addItem(f'{project[1]} | {project[0]}')
+
+    def updateProjectList(self):
+        project_type = self.ui.projectTypeInput.currentText()
+        self.populateProjectList(project_type)
+
+    def populateProjectOverview(self, selected_project):
+        if selected_project:
+            project_id = int(selected_project.text().split(' | ')[0].strip())
+
+            project_details = projectOverviewProjectDetailsSQL(project_id)
+            self.ui.projectNameLabel1.setText(project_details.get_project_name())
+            self.ui.projectDescriptionLabel.setText(project_details.get_project_description())
+            self.ui.projectDeadlineLabel.setText(project_details.get_project_deadline())
+            self.ui.projectCompletionLabel.setText(str(project_details.get_project_completion()))
+
+            tasks = projectOverviewTasksSQL(project_id)
+            self.ui.projectOverviewTaskTable.setRowCount(len(tasks))
+            for row, task in enumerate(tasks):
+                self.ui.projectOverviewTaskTable.setItem(row, 0, QTableWidgetItem(task.get_task_name()))
+                self.ui.projectOverviewTaskTable.setItem(row, 1, QTableWidgetItem(task.get_employee_name()))
+                self.ui.projectOverviewTaskTable.setItem(row, 2, QTableWidgetItem(task.get_task_deadline()))
+                self.ui.projectOverviewTaskTable.setItem(row, 3, QTableWidgetItem(task.get_task_completion()))
+
+    def initProjectsBox(self):
+        self.populateProjectsBox()
+        self.show()
+
+    def initEmployeeBox(self):
+        self.populateEmployeeBox()
+        self.show()
+
+    def populateProjectsBox(self):
+        projects = projectBoxSQL()
+        self.ui.selectTaskProjectInput.clear()
+        self.ui.selectTaskProjectInput.addItem('0 | All')
+        for project in projects:
+            self.ui.selectTaskProjectInput.addItem(f'{project[1]} | {project[0]}')
+        self.ui.selectTaskProjectInput.setCurrentIndex(0)
+
+    def populateEmployeeBox(self):
+        employees = employeeBoxSQL()
+        self.ui.selectTaskEmployeeInput.clear()
+        self.ui.selectTaskEmployeeInput.addItem('0 | All')
+        for employee in employees:
+            self.ui.selectTaskEmployeeInput.addItem(f'{employee[1]} | {employee[0]}')
+        self.ui.selectTaskEmployeeInput.setCurrentIndex(0)
+
+    def initTaskList(self):
+        self.populateTasksList('0', '0', 'All')
+        self.show()
+
+    def populateTasksList(self, project_id, employee_id, task_status):
+        tasks = taskListSQL(project_id, employee_id, task_status)
+        self.ui.openTaskList.clear()
+        for task in tasks:
+            self.ui.openTaskList.addItem(f'{task[1]} | {task[0]}')
+
+    def updateTasksList(self):
+        project_id = self.ui.selectTaskProjectInput.currentText().split(' | ')[0].strip()
+        employee_id = self.ui.selectTaskEmployeeInput.currentText().split(' | ')[0].strip()
+        task_status = self.ui.selectTaskTypeInput.currentText()
+        self.populateTasksList(project_id, employee_id, task_status)
+
+    def populateTaskDetails(self, selected_task):
+        if selected_task:
+            task_id = int(selected_task.text().split(' | ')[0].strip())
+            task_details = taskDetailsSQL(task_id)
+            task_owner = taskOwnerSQL(task_id)
+            self.ui.openTaskTitleLabel1.setText(task_details.get_task_name())
+            self.ui.taskDescLabel.setText(task_details.get_task_desc())
+            self.ui.openTaskDeadline.setText(task_details.get_task_deadline())
+            self.ui.openTaskCompletionLabel.setText(task_details.get_task_completion())
+            self.ui.openTaskTitleLabel2.setText(task_details.get_task_name())
+            self.ui.currentTaskHeaderLabel.setText(task_details.get_task_name())
+            self.ui.openTaskOwnerLabel.setText(task_owner)
+
+    def updateTaskCompletion(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = int(selected_task.text().split(' | ')[0].strip())
+            new_completion_text = self.ui.openTaskCompletionChangeBox.text()
+            try:
+                new_completion = int(new_completion_text)
+                if 0 <= new_completion <= 100:
+                    updateTaskCompletionSQL(task_id, new_completion)
+                    self.ui.openTaskCompletionLabel.setText(new_completion)
+                    self.systemComment(task_id, f'Task completion set at {new_completion}')
+                    QMessageBox.information(None, None, "Completion Set.")
+                else:
+                    QMessageBox.information(None, None, "Please enter a valid percent (0-100).")
+            except ValueError:
+                QMessageBox.information(None, None, "Please enter a valid integer.")
+
+    def writeComment(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = int(selected_task.text().split(' | ')[0].strip())
+            employee_id = self.employee_id
+            comment_text = self.ui.commentLineEdit.text()
+            current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
+
+    def refreshCommentBox(self):
+        self.ui.commentLineEdit.clear
+        self.populateCommentBox()
+
+    def systemComment(self, task_id, comment_text):
+        employee_id = 0
+        current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
+        self.refreshCommentBox()
+
+    def populateCommentBox(self):
+        selected_task = self.ui.openTaskList.currentItem()
+        if selected_task:
+            task_id = int(selected_task.text().split(' | ')[0].strip())
+            comments = commentsSQL(task_id)
+            self.ui.commentBox.clear()
+            for comment in comments:
+                self.ui.commentBox.append(comment.__str__())
+
+    def setHomeDetails(self):
+        employee_id = self.employee_id
+        details = homePageManagerSQL(employee_id)
+        self.ui.homeWelcomeLabel.setText(f'Welcome {details.get_employee_name()}!')
+        self.ui.overdueProjectsLabel.setText(f'There are {details.get_overdue_project_count()} overdue projects.')
+        self.ui.overdueTasksLabel.setText(f'There are {details.get_overdue_task_count()} overdue tasks.')
+        self.ui.approvalProjectLabel.setText(f'There are {details.get_approval_project_count()} projects waiting for '
+                                             f'approval before closure')
+        self.ui.approvalProjectsLabel.setText(f'There are {details.get_approval_task_count()} tasks waiting for '
+                                              f'approval before closure')
+
+    def changeOwnPassword(self):
+        check1 = self.ui.changePasswordInput1.text()
+        check2 = self.ui.changePasswordInput2.text()
+        if check1 == check2 and check1 != '':
+            resetPasswordSQL(self.employee_id, check1)
+            QMessageBox.information(None, None, 'Password has been changed')
+        else:
+            QMessageBox.information(None, None, 'Please enter valid password')
     def open_login_page(self):
         self.login_page = LoginWindow()
         self.login_page.show()

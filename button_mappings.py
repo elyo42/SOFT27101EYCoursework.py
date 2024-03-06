@@ -1,6 +1,6 @@
 import sqlite3
 from PyQt5.QtWidgets import QMessageBox
-from classes import Project_Overview_Project, Project_Overview_Tasks, Task_Details, Comment
+from classes import Project_Overview_Project, Project_Overview_Tasks, Task_Details, Comment, HomePageManager
 import datetime
 
 def login(employee_id, password):
@@ -306,3 +306,29 @@ def deleteUserSQL(employee_id, admin_id):
     cur.execute('delete from users where employee_id = ?', (employee_id,))
     conn.commit()
     conn.close()
+
+def homePageManagerSQL(employee_id):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('SELECT employee_name FROM users WHERE employee_id = ?', (employee_id,))
+    employee_name = cur.fetchone()
+    current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    cur.execute('SELECT count(distinct task_id), count(distinct project_id) FROM task WHERE task_status = 1 and '
+                'cast(task_deadline as DATE) < cast(? as DATE)', (current_date,))
+    overdue = cur.fetchone()
+    cur.execute('SELECT count(distinct task_id), count(distinct project_id) FROM task WHERE task_status = 1 and '
+                'task_completion = "100"')
+    approval = cur.fetchone()
+
+    homePageDetails = HomePageManager(employee_name[0], overdue[0], overdue[1], approval[0], approval[1])
+    conn.close()
+    return homePageDetails
+
+def taskOwnerSQL(task_id):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('SELECT employee_name FROM users u INNER JOIN task t on u.employee_id = t.employee_id '
+                'WHERE task_id = ?', (task_id,))
+    task_owner = cur.fetchone()[0]
+    conn.close()
+    return task_owner

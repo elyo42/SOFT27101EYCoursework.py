@@ -52,3 +52,22 @@ class Comment:
     def __str__(self):
         return f'[{self.sent_datetime}] | [{self.employee_name}] --- {self.comment_text}'
 
+class HomePageManager:
+    def __init__(self, employee_name, overdue_task_count, overdue_project_count, approval_task_count, approval_project_count):
+        self.employee_name = employee_name
+        self.overdue_task_count = overdue_task_count
+        self.overdue_project_count = overdue_project_count
+        self.approval_task_count = approval_task_count
+        self.approval_project_count = approval_project_count
+    def get_employee_name(self):
+        return self.employee_name
+    def get_overdue_task_count(self):
+        return self.overdue_task_count
+    def get_overdue_project_count(self):
+        return self.overdue_project_count
+    def get_approval_task_count(self):
+        return self.approval_task_count
+    def get_approval_project_count(self):
+        return self.approval_project_count
+
+
