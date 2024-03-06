@@ -18,13 +18,13 @@ class Ui_MainWindowLogin(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.loginUsernameLabel = QtWidgets.QLabel(self.centralwidget)
-        self.loginUsernameLabel.setGeometry(QtCore.QRect(120, 60, 47, 13))
+        self.loginUsernameLabel.setGeometry(QtCore.QRect(120, 60, 61, 16))
         self.loginUsernameLabel.setObjectName("loginUsernameLabel")
         self.loginUsernameInput = QtWidgets.QLineEdit(self.centralwidget)
         self.loginUsernameInput.setGeometry(QtCore.QRect(250, 60, 113, 20))
         self.loginUsernameInput.setObjectName("loginUsernameInput")
         self.loginPasswordLabel = QtWidgets.QLabel(self.centralwidget)
-        self.loginPasswordLabel.setGeometry(QtCore.QRect(120, 140, 47, 13))
+        self.loginPasswordLabel.setGeometry(QtCore.QRect(120, 140, 61, 21))
         self.loginPasswordLabel.setObjectName("loginPasswordLabel")
         self.loginPasswordInput = QtWidgets.QLineEdit(self.centralwidget)
         self.loginPasswordInput.setGeometry(QtCore.QRect(240, 140, 113, 20))
@@ -43,9 +43,7 @@ class Ui_MainWindowLogin(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.loginUsernameLabel.setText(_translate("MainWindow", "TextLabel"))
-        self.loginPasswordLabel.setText(_translate("MainWindow", "TextLabel"))
-        self.loginButton.setText(_translate("MainWindow", "PushButton"))
-
-
+        self.loginUsernameLabel.setText(_translate("MainWindow", "Username"))
+        self.loginPasswordLabel.setText(_translate("MainWindow", "Password"))
+        self.loginButton.setText(_translate("MainWindow", "Login"))
 

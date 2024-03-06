@@ -377,5 +377,5 @@ def getUserEmailProjectSQL(project_id):
     email = cur.fetchall()
     conn.close()
     return email
-print(getUserEmailProjectSQL(1))
+
 
