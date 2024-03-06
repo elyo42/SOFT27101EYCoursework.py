@@ -287,10 +287,10 @@ def changeUserPrivilegeSQL(employee_id, admin_flag):
     cur.execute('UPDATE users SET admin_flag = ? WHERE employee_id = ?', (admin_flag, employee_id))
     conn.commit()
     conn.close()
-def resetPasswordSQL(employee_id):
+def resetPasswordSQL(employee_id, password):
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
-    cur.execute('UPDATE users SET password = ? WHERE employee_id = ?', (employee_id, employee_id))
+    cur.execute('UPDATE users SET password = ? WHERE employee_id = ?', (password, employee_id))
     conn.commit()
     conn.close()
 def deleteUserSQL(employee_id, admin_id):

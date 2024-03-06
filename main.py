@@ -52,6 +52,7 @@ class AdminWindow(QMainWindow):
         self.ui.setPrivilegesButton.clicked.connect(self.changeUserPrivilege)
         self.ui.resetPasswordButton.clicked.connect(self.resetUserPassword)
         self.ui.deleteUserButton.clicked.connect(self.deleteUser)
+        self.ui.changePasswordButton.clicked.connect(self.changeOwnPassword)
 
 
 
@@ -353,7 +354,7 @@ class AdminWindow(QMainWindow):
 
     def resetUserPassword(self):
         employee_id = int(self.ui.setPrivilegesUserInput.currentText().split(' | ')[0].strip())
-        resetPasswordSQL(employee_id)
+        resetPasswordSQL(employee_id, employee_id)
         QMessageBox.information(None, None, 'Password has been reset')
 
     def deleteUser(self):
@@ -370,6 +371,14 @@ class AdminWindow(QMainWindow):
 
 
 
+    def changeOwnPassword(self):
+        check1 = self.ui.changePasswordInput1.text()
+        check2 = self.ui.changePasswordInput2.text()
+        if check1 == check2 and check1 != '':
+            resetPasswordSQL(self.employee_id, check1)
+            QMessageBox.information(None, None, 'Password has been changed')
+        else:
+            QMessageBox.information(None, None, 'Please enter valid password')
 
 
 
