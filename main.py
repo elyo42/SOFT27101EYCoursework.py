@@ -7,7 +7,8 @@ from managerpage import Ui_MainWindowManager
 from button_mappings import (projectBoxSQL, login, projectListSQL, projectOverviewTasksSQL, projectOverviewProjectDetailsSQL,
                              manageProjectsSQL, closeProjectsSQL, reopenProjectsSQL, employeeBoxSQL, taskListSQL, taskDetailsSQL,
                              updateTaskCompletionSQL, updateTaskUserSQL, updateTaskDeadlineSQL, closeTaskSQL, reopenTaskSQL,
-                             writeCommentSQL, commentsSQL, newProjectSQL, newTaskSQL, newUserSQL)
+                             writeCommentSQL, commentsSQL, newProjectSQL, newTaskSQL, newUserSQL, changeUserPrivilegeSQL
+                              ,resetPasswordSQL, deleteUserSQL)
 from classes import Project_Overview_Project, Project_Overview_Tasks
 import datetime
 
@@ -47,6 +48,11 @@ class AdminWindow(QMainWindow):
         self.initNewTaskEmployeeBox()
         self.ui.newTaskSubmitButton.clicked.connect(self.createTask)
         self.ui.newEmployeeSubmitButton.clicked.connect(self.createEmployee)
+        self.initManageEmployeeBox()
+        self.ui.setPrivilegesButton.clicked.connect(self.changeUserPrivilege)
+        self.ui.resetPasswordButton.clicked.connect(self.resetUserPassword)
+        self.ui.deleteUserButton.clicked.connect(self.deleteUser)
+
 
 
 
@@ -299,6 +305,43 @@ class AdminWindow(QMainWindow):
             QMessageBox.information(None, None, 'New user created')
         except:
             QMessageBox.information(None, None, 'Invalid input')
+
+
+    def initManageEmployeeBox(self):
+        self.populateManageEmployeeBox()
+        self.show()
+    def populateManageEmployeeBox(self):
+        employees = employeeBoxSQL()
+        self.ui.setPrivilegesUserInput.clear()
+        self.ui.setPrivilegesUserInput.addItem('Select User')
+        for employee in employees:
+            self.ui.setPrivilegesUserInput.addItem(f'{employee[1]} | {employee[0]}')
+        self.ui.setPrivilegesUserInput.setCurrentIndex(0)
+
+
+    def changeUserPrivilege(self):
+        employee_id = int(self.ui.setPrivilegesUserInput.currentText().split(' | ')[0].strip())
+        new_privilege = self.ui.setPrivilegesInput.currentText()
+        if new_privilege == 'User':
+            admin_flag = 0
+        else:
+            admin_flag = 1
+        changeUserPrivilegeSQL(employee_id, admin_flag)
+        QMessageBox.information(None, None, 'User Privilege changed')
+
+    def resetUserPassword(self):
+        employee_id = int(self.ui.setPrivilegesUserInput.currentText().split(' | ')[0].strip())
+        resetPasswordSQL(employee_id)
+        QMessageBox.information(None, None, 'Password has been reset')
+
+    def deleteUser(self):
+        employee_id = int(self.ui.setPrivilegesUserInput.currentText().split(' | ')[0].strip())
+        admin_id = self.employee_id
+        deleteUserSQL(employee_id, admin_id)
+        QMessageBox.information(None, None, 'User has been deleted. Please reassign tasks.')
+
+
+
 
 
 

@@ -280,3 +280,23 @@ def newUserSQL(employee_id, employee_name, email, admin_flag):
                     VALUES(?,?,?,?,?)''', (employee_id, employee_name, email, admin_flag, employee_id))
     conn.commit()
     conn.close()
+
+def changeUserPrivilegeSQL(employee_id, admin_flag):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('UPDATE users SET admin_flag = ? WHERE employee_id = ?', (admin_flag, employee_id))
+    conn.commit()
+    conn.close()
+def resetPasswordSQL(employee_id):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('UPDATE users SET password = ? WHERE employee_id = ?', (employee_id, employee_id))
+    conn.commit()
+    conn.close()
+def deleteUserSQL(employee_id, admin_id):
+    conn = sqlite3.connect('projectManagement.db')
+    cur = conn.cursor()
+    cur.execute('UPDATE task SET employee_id = ? WHERE employee_id = ?', (admin_id, employee_id))
+    cur.execute('delete from users where employee_id = ?', (employee_id,))
+    conn.commit()
+    conn.close()
