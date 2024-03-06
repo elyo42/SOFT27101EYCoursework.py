@@ -87,7 +87,7 @@ class AdminWindow(QMainWindow):
             self.ui.projectDeadlineLabel.setText(project_details.get_project_deadline())
             self.ui.projectCompletionLabel.setText(str(project_details.get_project_completion()))
             self.ui.manageProjectNameLabel.setText(project_details.get_project_name())
-            self.ui.currentProjectDeadlinelabel.setText(project_details.get_project_deadline()) ###
+            self.ui.currentProjectDeadlinelabel.setText(project_details.get_project_deadline())
 
             tasks = projectOverviewTasksSQL(project_id)
             self.ui.projectOverviewTaskTable.setRowCount(len(tasks))
@@ -103,6 +103,9 @@ class AdminWindow(QMainWindow):
             project_id = int(selected_project.text().split(' | ')[0].strip())
             selected_date = self.ui.currentProjectNewDeadlineInput.date().toString('yyyy-MM-dd')
             manageProjectsSQL(project_id, selected_date)
+            self.updateProjectList()
+            self.ui.projectDeadlineLabel.setText(selected_date)
+            self.ui.currentProjectDeadlinelabel.setText(selected_date)
 
 
     def closeProject(self):
@@ -110,12 +113,14 @@ class AdminWindow(QMainWindow):
         if selected_project:
             project_id = int(selected_project.text().split(' | ')[0].strip())
             closeProjectsSQL(project_id)
+            self.updateProjectList()
 
     def reopenProject(self):
         selected_project = self.ui.projectList.currentItem()
         if selected_project:
             project_id = int(selected_project.text().split(' | ')[0].strip())
             reopenProjectsSQL(project_id)
+            self.updateProjectList()
 
 
 
@@ -154,8 +159,8 @@ class AdminWindow(QMainWindow):
             self.ui.openTaskList.addItem(f'{task[1]} | {task[0]}')
 
     def updateTasksList(self):
-        project_id = int(self.ui.selectTaskProjectInput.currentText().split(' | ')[0].strip())
-        employee_id = int(self.ui.selectTaskEmployeeInput.currentText().split(' | ')[0].strip())
+        project_id = self.ui.selectTaskProjectInput.currentText().split(' | ')[0].strip()
+        employee_id = self.ui.selectTaskEmployeeInput.currentText().split(' | ')[0].strip()
         task_status = self.ui.selectTaskTypeInput.currentText()
         self.populateTasksList(project_id, employee_id, task_status)
 
@@ -179,6 +184,7 @@ class AdminWindow(QMainWindow):
                 new_completion = int(new_completion_text)
                 if 0 <= new_completion <= 100:
                     updateTaskCompletionSQL(task_id, new_completion)
+                    self.ui.openTaskCompletionLabel.setText(new_completion)
                     QMessageBox.information(None, None, "Completion Set.")
                 else:
                     QMessageBox.information(None, None, "Please enter a valid percent (0-100).")
@@ -203,23 +209,31 @@ class AdminWindow(QMainWindow):
             task_id = int(selected_task.text().split(' | ')[0].strip())
             selected_date = self.ui.currentTaskNewDeadlineInput.date().toString('yyyy-MM-dd')
             updateTaskDeadlineSQL(task_id, selected_date)
+            self.ui.openTaskDeadline.setText(selected_date)
+            QMessageBox.information(None, None, 'New Deadline Set')
     def updateTaskUser(self):
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = selected_task.text().split(' | ')[0].strip()
             selected_user = self.ui.currentTaskNewEmployeeInput.currentText()
             updateTaskUserSQL(task_id, selected_user)
+            self.updateTasksList()
+            QMessageBox.information(None, None, 'New User Set')
     def closeTask(self):
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = selected_task.text().split(' | ')[0].strip()
             closeTaskSQL(task_id)
+            self.updateTasksList()
+            QMessageBox.information(None, None, 'Task Closed')
 
     def reopenTask(self):
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = selected_task.text().split(' | ')[0].strip()
             reopenTaskSQL(task_id)
+            self.updateTasksList()
+            QMessageBox.information(None,None, 'Task Reopened')
 
     def writeComment(self):
         selected_task = self.ui.openTaskList.currentItem()
@@ -252,6 +266,9 @@ class AdminWindow(QMainWindow):
         self.populateNewTaskProjectBox()
         self.ui.newProjectNameInput.clear()
         self.ui.newProjectDescInput.clear()
+        self.populateProjectsBox()
+        self.populateNewTaskProjectBox()
+        self.updateProjectList()
 
     def initNewTaskProjectBox(self):
         self.populateNewTaskProjectBox()
@@ -290,6 +307,8 @@ class AdminWindow(QMainWindow):
                 self.populateNewTaskProjectBox()
                 self.ui.newTaskNameInput.clear()
                 self.ui.newTaskDescInput.clear()
+                self.updateTasksList()
+
             else:
                 QMessageBox.information(None, None, 'Task input invalid')
         except:
@@ -303,6 +322,9 @@ class AdminWindow(QMainWindow):
             admin_flag = int(self.ui.radioButton.isChecked())
             newUserSQL(employee_id, user_name, user_email, admin_flag)
             QMessageBox.information(None, None, 'New user created')
+            self.populateNewTaskEmployeeBox()
+            self.populateEmployeeBox()
+            self.populateManageEmployeeBox()
         except:
             QMessageBox.information(None, None, 'Invalid input')
 
@@ -339,6 +361,9 @@ class AdminWindow(QMainWindow):
         admin_id = self.employee_id
         deleteUserSQL(employee_id, admin_id)
         QMessageBox.information(None, None, 'User has been deleted. Please reassign tasks.')
+        self.populateNewTaskEmployeeBox()
+        self.populateEmployeeBox()
+        self.populateManageEmployeeBox()
 
 
 

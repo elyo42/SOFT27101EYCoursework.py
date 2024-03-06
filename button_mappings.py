@@ -83,7 +83,7 @@ def manageProjectsSQL(project_id, new_deadline):
     cur.execute('UPDATE projects SET project_deadline = ? WHERE project_id = ?', (new_deadline, project_id))
     conn.commit()
     conn.close()
-    QMessageBox.information(None, None, "Project Deadline Updated.")
+
 
 def closeProjectsSQL(project_id):
     conn = sqlite3.connect('projectmanagement.db')
@@ -91,7 +91,7 @@ def closeProjectsSQL(project_id):
     cur.execute('UPDATE projects SET project_status = 2 WHERE project_id = ?', (project_id,))
     conn.commit()
     conn.close()
-    QMessageBox.information(None, None, "Project Closed.")
+
 
 def reopenProjectsSQL(project_id):
     conn = sqlite3.connect('projectmanagement.db')
@@ -99,7 +99,7 @@ def reopenProjectsSQL(project_id):
     cur.execute('UPDATE projects SET project_status = 1 WHERE project_id = ?', (project_id,))
     conn.commit()
     conn.close()
-    QMessageBox.information(None, None, "Project Reopened.")
+
 
 def projectBoxSQL():
     conn = sqlite3.connect('projectmanagement.db')
@@ -206,7 +206,7 @@ def updateTaskDeadlineSQL(task_id, new_deadline):
     cur.execute('UPDATE task SET task_deadline = ? WHERE task_id = ?', (new_deadline, task_id))
     conn.commit()
     conn.close()
-    QMessageBox.information(None, None, "Task Deadline Updated.")
+
 
 
 def updateTaskUserSQL(task_id, new_user):
@@ -217,7 +217,7 @@ def updateTaskUserSQL(task_id, new_user):
     cur.execute('UPDATE task SET employee_id = ? WHERE task_id = ?', (employee, task_id))
     conn.commit()
     conn.close()
-    QMessageBox.information(None, None, "Task Owner Updated.")
+
 
 
 def closeTaskSQL(task_id):
@@ -226,7 +226,7 @@ def closeTaskSQL(task_id):
     cur.execute('UPDATE task SET task_status = 2 WHERE task_id = ?', (task_id,))
     conn.commit()
     conn.close()
-    QMessageBox.information(None, None, "Task Closed.")
+
 
 def reopenTaskSQL(task_id):
     conn = sqlite3.connect('projectmanagement.db')
@@ -234,7 +234,7 @@ def reopenTaskSQL(task_id):
     cur.execute('UPDATE task SET task_status = 1 WHERE task_id = ?', (task_id,))
     conn.commit()
     conn.close()
-    QMessageBox.information(None, None, "Task Reopened.")
+
 
 def writeCommentSQL(task_id, employee_id, comment_text, current_date_time):
     conn = sqlite3.connect('projectManagement.db')
