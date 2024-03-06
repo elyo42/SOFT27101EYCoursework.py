@@ -16,7 +16,8 @@ def login(employee_id, password):
     conn.close()
 
     # Check if a user with the provided credentials exists
-    if user:
+    if user is not None and user[0] != 0:
+
         if user[2] == 1:  # Check if the user is an admin
             QMessageBox.information(None, "Login", "Login Successful! Welcome Admin!")
 
@@ -28,6 +29,7 @@ def login(employee_id, password):
             # Redirect to standard user page
     else:
         QMessageBox.warning(None, "Login", "Invalid Employee ID or Password!")
+        user = None
 
     return user
 
@@ -112,7 +114,7 @@ def projectBoxSQL():
 def employeeBoxSQL():
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
-    cur.execute('SELECT employee_name, employee_id FROM users')
+    cur.execute('SELECT employee_name, employee_id FROM users WHERE not employee_id = 0')
     employees = cur.fetchall()
     conn.close()
     return employees
@@ -271,7 +273,11 @@ def newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline):
     cur.execute('''INSERT INTO task (project_id, employee_id, task_name, task_desc, task_completion, task_deadline, task_status)
                 VALUES(?,?,?,?,?,?,?)''', (project_id, employee_id, task_name, task_desc, 0, task_deadline, 1))
     conn.commit()
+    cur.execute('SELECT task_id from task WHERE project_id = ? and employee_id = ? and task_name = ? and task_desc = ?'
+                ' and task_deadline = ?', (project_id, employee_id, task_name, task_desc, task_deadline))
+    new_task_id = cur.fetchone()[0]
     conn.close()
+    return new_task_id
 
 def newUserSQL(employee_id, employee_name, email, admin_flag):
     conn = sqlite3.connect('projectManagement.db')

@@ -186,6 +186,7 @@ class AdminWindow(QMainWindow):
                 if 0 <= new_completion <= 100:
                     updateTaskCompletionSQL(task_id, new_completion)
                     self.ui.openTaskCompletionLabel.setText(new_completion)
+                    self.systemComment(task_id, f'Task completion set at {new_completion}')
                     QMessageBox.information(None, None, "Completion Set.")
                 else:
                     QMessageBox.information(None, None, "Please enter a valid percent (0-100).")
@@ -211,6 +212,7 @@ class AdminWindow(QMainWindow):
             selected_date = self.ui.currentTaskNewDeadlineInput.date().toString('yyyy-MM-dd')
             updateTaskDeadlineSQL(task_id, selected_date)
             self.ui.openTaskDeadline.setText(selected_date)
+            self.systemComment(task_id,f'Task Deadline changed to {selected_date}')
             QMessageBox.information(None, None, 'New Deadline Set')
     def updateTaskUser(self):
         selected_task = self.ui.openTaskList.currentItem()
@@ -219,6 +221,7 @@ class AdminWindow(QMainWindow):
             selected_user = self.ui.currentTaskNewEmployeeInput.currentText()
             updateTaskUserSQL(task_id, selected_user)
             self.updateTasksList()
+            self.systemComment(task_id,f'Task Owner changed to {selected_user}')
             QMessageBox.information(None, None, 'New User Set')
     def closeTask(self):
         selected_task = self.ui.openTaskList.currentItem()
@@ -226,7 +229,9 @@ class AdminWindow(QMainWindow):
             task_id = selected_task.text().split(' | ')[0].strip()
             closeTaskSQL(task_id)
             self.updateTasksList()
+            self.systemComment(task_id,f'Task Closed by user {self.employee_id}')
             QMessageBox.information(None, None, 'Task Closed')
+
 
     def reopenTask(self):
         selected_task = self.ui.openTaskList.currentItem()
@@ -234,6 +239,7 @@ class AdminWindow(QMainWindow):
             task_id = selected_task.text().split(' | ')[0].strip()
             reopenTaskSQL(task_id)
             self.updateTasksList()
+            self.systemComment(task_id,f'Task Reopened by user {self.employee_id}')
             QMessageBox.information(None,None, 'Task Reopened')
 
     def writeComment(self):
@@ -247,6 +253,13 @@ class AdminWindow(QMainWindow):
     def refreshCommentBox(self):
         self.ui.commentLineEdit.clear
         self.populateCommentBox()
+    def systemComment(self, task_id, comment_text):
+        employee_id = 0
+        current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
+        self.refreshCommentBox()
+
+
 
 
     def populateCommentBox(self):
@@ -303,12 +316,13 @@ class AdminWindow(QMainWindow):
             task_desc = self.ui.newTaskDescInput.toPlainText()
             task_deadline = self.ui.newTaskDeadlineInput.date().toString('yyyy-MM-dd')
             if task_name != '' or task_desc != '':
-                newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline)
+                new_task_id = newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline)
                 QMessageBox.information(None, None, 'Project Created')
                 self.populateNewTaskProjectBox()
                 self.ui.newTaskNameInput.clear()
                 self.ui.newTaskDescInput.clear()
                 self.updateTasksList()
+                self.systemComment(new_task_id, f'Task created by user {self.employee_id}')
 
             else:
                 QMessageBox.information(None, None, 'Task input invalid')

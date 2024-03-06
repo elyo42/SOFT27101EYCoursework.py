@@ -76,15 +76,15 @@ def insert_into_user(employee_id, employee_name, email, admin_flag, password):
     conn.commit()
     conn.close()
 
-insert_into_user('01290103','Elliot York','elliotyork@outlook.com',1,'password1')
+insert_into_user('0','System','',1,'')
 
-for i in range(1, 6):
-    insert_into_user(i, f'User_{i}', f'user{i}@example.com', 0, f'password{i}')
-
-
-for i in range(1, 6):
-    insert_into_project(f'Project_{i}', f'Description of Project {i}', ('2024-05-0' + str(i)), i%2)
-
-
-for i in range(1, 26):
-    insert_into_task((i%5)+1, (i%5)+1, f'Task {i} for Project {(i%5)+1}', f'Description of Task {i}', (i*4), '2024-04-1' + str(i%5), i%2)
+# for i in range(1, 6):
+#     insert_into_user(i, f'User_{i}', f'user{i}@example.com', 0, f'password{i}')
+#
+#
+# for i in range(1, 6):
+#     insert_into_project(f'Project_{i}', f'Description of Project {i}', ('2024-05-0' + str(i)), i%2)
+#
+#
+# for i in range(1, 26):
+#     insert_into_task((i%5)+1, (i%5)+1, f'Task {i} for Project {(i%5)+1}', f'Description of Task {i}', (i*4), '2024-04-1' + str(i%5), i%2)
