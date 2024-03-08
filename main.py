@@ -15,6 +15,9 @@ import datetime
 
 
 class AdminWindow(QMainWindow):
+    '''
+    this class inherits the manager page UI and handles the functions that the widgets for the admin page rely on.
+    '''
     def __init__(self, employee_id):
         super().__init__()
         self.employee_id = employee_id
@@ -68,20 +71,39 @@ class AdminWindow(QMainWindow):
 
 
     def initProjectList(self):
+        '''
+        Initialize the Project List
+        :return: project list
+        '''
         self.populateProjectList('All')
         self.show()
     def populateProjectList(self, project_type):
+        '''
+        populate project list based on project type
+        :param project_type: selection from project type box
+        :return: project list
+        '''
         projects = projectListSQL(project_type)
         self.ui.projectList.clear()
 
         for project in projects:
             self.ui.projectList.addItem(f'{project[1]} | {project[0]}')
+
     def updateProjectList(self):
+        '''
+        update project when project type changes
+        :return: project list
+        '''
         project_type = self.ui.projectTypeInput.currentText()
         self.populateProjectList(project_type)
 
 
     def populateProjectOverview(self, selected_project):
+        '''
+        populate project details when a project list item is selected
+        :param selected_project: project list item clicked
+        :return: project details
+        '''
         if selected_project:
             project_id = int(selected_project.text().split(' | ')[0].strip())
 
@@ -102,6 +124,10 @@ class AdminWindow(QMainWindow):
                 self.ui.projectOverviewTaskTable.setItem(row, 3, QTableWidgetItem(task.get_task_completion()))
 
     def updateProjectDeadline(self):
+        '''
+        Updates the selected project deadline to entered date function for set deadline button
+        :return:
+        '''
         selected_project = self.ui.projectList.currentItem()
         if selected_project:
             project_id = int(selected_project.text().split(' | ')[0].strip())
@@ -113,6 +139,10 @@ class AdminWindow(QMainWindow):
 
 
     def closeProject(self):
+        '''
+        Closes the selected project
+        :return:
+        '''
         selected_project = self.ui.projectList.currentItem()
         if selected_project:
             project_id = int(selected_project.text().split(' | ')[0].strip())
@@ -126,6 +156,10 @@ class AdminWindow(QMainWindow):
             QMessageBox.information(None, None, 'Project Closed')
 
     def reopenProject(self):
+        '''
+        Reopens the selected project
+        :return:
+        '''
         selected_project = self.ui.projectList.currentItem()
         if selected_project:
             project_id = int(selected_project.text().split(' | ')[0].strip())
@@ -136,13 +170,26 @@ class AdminWindow(QMainWindow):
 
 
     def initProjectsBox(self):
+        '''
+        Initializes the project combobox with project details
+        :return:
+        '''
         self.populateProjectsBox()
         self.show()
+
     def initEmployeeBox(self):
+        '''
+        Initializes the employee combobox with employee details
+        :return:
+        '''
         self.populateEmployeeBox()
         self.show()
 
     def populateProjectsBox(self):
+        '''
+        Populates the project combobox with project details
+        :return:
+        '''
         projects = projectBoxSQL()
         self.ui.selectTaskProjectInput.clear()
         self.ui.selectTaskProjectInput.addItem('0 | All')
@@ -152,6 +199,10 @@ class AdminWindow(QMainWindow):
 
 
     def populateEmployeeBox(self):
+        '''
+        Populates the employee combobox with employee details
+        :return:
+        '''
         employees = employeeBoxSQL()
         self.ui.selectTaskEmployeeInput.clear()
         self.ui.selectTaskEmployeeInput.addItem('0 | All')
@@ -161,21 +212,42 @@ class AdminWindow(QMainWindow):
 
 
     def initTaskList(self):
+        '''
+        Initializes the task list combobox with all tasks
+        :return:
+        '''
         self.populateTasksList('0','0','All')
         self.show()
+
     def populateTasksList(self, project_id, employee_id, task_status):
+        '''
+        populates the task list with the selected criteria from the comboboxes
+        :param project_id: id of the project to view tasks for
+        :param employee_id: id of the employee to view tasks for
+        :param task_status: task type of tasks to view
+        :return:
+        '''
         tasks = taskListSQL(project_id, employee_id, task_status)
         self.ui.openTaskList.clear()
         for task in tasks:
             self.ui.openTaskList.addItem(f'{task[1]} | {task[0]}')
 
     def updateTasksList(self):
+        '''
+        Updates the task list when selection criteria changes
+        :return:
+        '''
         project_id = self.ui.selectTaskProjectInput.currentText().split(' | ')[0].strip()
         employee_id = self.ui.selectTaskEmployeeInput.currentText().split(' | ')[0].strip()
         task_status = self.ui.selectTaskTypeInput.currentText()
         self.populateTasksList(project_id, employee_id, task_status)
 
     def populateTaskDetails(self,selected_task):
+        '''
+        Populates the task details based on the selected task
+        :param selected_task: task details selected from task list
+        :return:
+        '''
         if selected_task:
             task_id = int(selected_task.text().split(' | ')[0].strip())
             task_details = taskDetailsSQL(task_id)
@@ -189,6 +261,10 @@ class AdminWindow(QMainWindow):
             self.ui.openTaskOwnerLabel.setText(task_owner)
 
     def updateTaskCompletion(self):
+        '''
+        Updates the task completion of the selected task to entered value
+        :return:
+        '''
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = int(selected_task.text().split(' | ')[0].strip())
@@ -206,6 +282,10 @@ class AdminWindow(QMainWindow):
                 QMessageBox.information(None, None, "Please enter a valid integer.")
 
     def chaseUpdateRequest(self):
+        '''
+        sends email to task owner of selected task to provide an update
+        :return:
+        '''
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             employee_id = int(self.ui.openTaskOwnerLabel.text().split(' | ')[0].strip())
@@ -219,9 +299,18 @@ class AdminWindow(QMainWindow):
 
 
     def initTaskNewUserBox(self):
+        '''
+        initialize select employee box for selected task
+        :return:
+        '''
         self.populateTaskNewUserBox()
         self.show()
+
     def populateTaskNewUserBox(self):
+        '''
+        populate employee box for selected task
+        :return:
+        '''
         employees = employeeBoxSQL()
         self.ui.currentTaskNewEmployeeInput.clear()
         self.ui.currentTaskNewEmployeeInput.addItem('Select User')
@@ -230,6 +319,10 @@ class AdminWindow(QMainWindow):
         self.ui.currentTaskNewEmployeeInput.setCurrentIndex(0)
 
     def updateTaskDeadline(self):
+        '''
+        update deadline of selected task to entered date
+        :return:
+        '''
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = int(selected_task.text().split(' | ')[0].strip())
@@ -240,6 +333,10 @@ class AdminWindow(QMainWindow):
             QMessageBox.information(None, None, 'New Deadline Set')
 
     def updateTaskUser(self):
+        '''
+        update user of selected task to selected user
+        :return:
+        '''
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = selected_task.text().split(' | ')[0].strip()
@@ -255,6 +352,10 @@ class AdminWindow(QMainWindow):
             QMessageBox.information(None, None, 'New User Set')
 
     def closeTask(self):
+        '''
+        Closes the selected task
+        :return:
+        '''
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = selected_task.text().split(' | ')[0].strip()
@@ -270,6 +371,10 @@ class AdminWindow(QMainWindow):
 
 
     def reopenTask(self):
+        '''
+        Reopen the selected task
+        :return:
+        '''
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = selected_task.text().split(' | ')[0].strip()
@@ -279,6 +384,10 @@ class AdminWindow(QMainWindow):
             QMessageBox.information(None,None, 'Task Reopened')
 
     def writeComment(self):
+        '''
+        create a comment for the selected task from the entered text
+        :return:
+        '''
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = int(selected_task.text().split(' | ')[0].strip())
@@ -288,10 +397,20 @@ class AdminWindow(QMainWindow):
             writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
 
     def refreshCommentBox(self):
+        '''
+        refresh the comment box to show all comments for selected task
+        :return:
+        '''
         self.ui.commentLineEdit.clear
         self.populateCommentBox()
 
     def systemComment(self, task_id, comment_text):
+        '''
+        create comment for system user
+        :param task_id: id of the task the comment is for
+        :param comment_text: text of the comment
+        :return:
+        '''
         employee_id = 0
         current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
@@ -301,6 +420,10 @@ class AdminWindow(QMainWindow):
 
 
     def populateCommentBox(self):
+        '''
+        populate the comment box to show all comments for selected task
+        :return:
+        '''
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = int(selected_task.text().split(' | ')[0].strip())
@@ -310,6 +433,10 @@ class AdminWindow(QMainWindow):
                 self.ui.commentBox.append(comment.__str__())
 
     def createProject(self):
+        '''
+        create new project using the inputs on the create project tab
+        :return:
+        '''
         project_name = self.ui.newProjectNameInput.text()
         project_desc = self.ui.newProjectDescInput.toPlainText()
         project_deadline = self.ui.newProjectDeadlineInput.date().toString('yyyy-MM-dd')
@@ -323,13 +450,26 @@ class AdminWindow(QMainWindow):
         self.updateProjectList()
 
     def initNewTaskProjectBox(self):
+        '''
+        initialize project select box for new tasks
+        :return:
+        '''
         self.populateNewTaskProjectBox()
         self.show()
+
     def initNewTaskEmployeeBox(self):
+        '''
+        initialize employee select box for new tasks
+        :return:
+        '''
         self.populateNewTaskEmployeeBox()
         self.show()
 
     def populateNewTaskProjectBox(self):
+        '''
+        populate project select box for new tasks
+        :return:
+        '''
         projects = projectBoxSQL()
         self.ui.newTaskProjectInput.clear()
         self.ui.newTaskProjectInput.addItem('Select Project')
@@ -339,6 +479,10 @@ class AdminWindow(QMainWindow):
 
 
     def populateNewTaskEmployeeBox(self):
+        '''
+        populate employee select box for new tasks
+        :return:
+        '''
         employees = employeeBoxSQL()
         self.ui.newTaskEmployeeInput.clear()
         self.ui.newTaskEmployeeInput.addItem('Select User')
@@ -347,6 +491,10 @@ class AdminWindow(QMainWindow):
         self.ui.newTaskEmployeeInput.setCurrentIndex(0)
 
     def createTask(self):
+        '''
+        create new task from inputs on the create task tab and send email to assigned user
+        :return:
+        '''
         try:
             project_id = int(self.ui.newTaskProjectInput.currentText().split(' | ')[0].strip())
             employee_id = int(self.ui.newTaskEmployeeInput.currentText().split(' | ')[0].strip())
@@ -373,6 +521,10 @@ class AdminWindow(QMainWindow):
             QMessageBox.information(None, None, 'Task input invalid')
 
     def createEmployee(self):
+        '''
+        Create a new employee using inputs in the create employee tab and send welcome email to new user
+        :return:
+        '''
         try:
             employee_id = int(self.ui.newEmployeeIdInput.text())
             user_name = self.ui.newEmployeeNameInput.text()
@@ -392,9 +544,18 @@ class AdminWindow(QMainWindow):
 
 
     def initManageEmployeeBox(self):
+        '''
+        Initialize the employee select box for manage employee tab
+        :return:
+        '''
         self.populateManageEmployeeBox()
         self.show()
+
     def populateManageEmployeeBox(self):
+        '''
+        populate the employee select box for manage employee tab
+        :return:
+        '''
         employees = employeeBoxSQL()
         self.ui.setPrivilegesUserInput.clear()
         self.ui.setPrivilegesUserInput.addItem('Select User')
@@ -404,6 +565,10 @@ class AdminWindow(QMainWindow):
 
 
     def changeUserPrivilege(self):
+        '''
+        Change the admin flag for selected employee
+        :return:
+        '''
         employee_id = int(self.ui.setPrivilegesUserInput.currentText().split(' | ')[0].strip())
         new_privilege = self.ui.setPrivilegesInput.currentText()
         if new_privilege == 'User':
@@ -414,11 +579,19 @@ class AdminWindow(QMainWindow):
         QMessageBox.information(None, None, 'User Privilege changed')
 
     def resetUserPassword(self):
+        '''
+        Reset the password to employee_id for selected employee
+        :return:
+        '''
         employee_id = int(self.ui.setPrivilegesUserInput.currentText().split(' | ')[0].strip())
         resetPasswordSQL(employee_id, employee_id)
         QMessageBox.information(None, None, 'Password has been reset')
 
     def deleteUser(self):
+        '''
+        Delete the selected employee
+        :return:
+        '''
         employee_id = int(self.ui.setPrivilegesUserInput.currentText().split(' | ')[0].strip())
         admin_id = self.employee_id
         deleteUserSQL(employee_id, admin_id)
@@ -428,6 +601,10 @@ class AdminWindow(QMainWindow):
         self.populateManageEmployeeBox()
 
     def setHomeDetails(self):
+        '''
+        Set the home details of the admin
+        :return:
+        '''
         employee_id = self.employee_id
         details = homePageManagerSQL(employee_id)
         self.ui.homeWelcomeLabel.setText(f'Welcome {details.get_employee_name()}!')
@@ -439,6 +616,10 @@ class AdminWindow(QMainWindow):
                                               f'approval before closure')
 
     def changeOwnPassword(self):
+        '''
+        Change the of the logged-in user to entered field
+        :return:
+        '''
         check1 = self.ui.changePasswordInput1.text()
         check2 = self.ui.changePasswordInput2.text()
         if check1 == check2 and check1 != '':
@@ -448,6 +629,10 @@ class AdminWindow(QMainWindow):
             QMessageBox.information(None, None, 'Please enter valid password')
 
     def open_login_page(self):
+        '''
+        Open the login when user logs out
+        :return:
+        '''
         self.login_page = LoginWindow()
         self.login_page.show()
         self.close()
@@ -482,10 +667,19 @@ class UserWindow(QMainWindow):
         self.setHomeDetails()
 
     def initProjectList(self):
+        '''
+        Initialize the project list
+        :return:
+        '''
         self.populateProjectList('All')
         self.show()
 
     def populateProjectList(self, project_type):
+        '''
+        Populate the project list based on project type
+        :param project_type: project type from type combo box
+        :return:
+        '''
         projects = projectListSQL(project_type)
         self.ui.projectList.clear()
 
@@ -493,10 +687,19 @@ class UserWindow(QMainWindow):
             self.ui.projectList.addItem(f'{project[1]} | {project[0]}')
 
     def updateProjectList(self):
+        '''
+        Update the project list based on selected project type
+        :return:
+        '''
         project_type = self.ui.projectTypeInput.currentText()
         self.populateProjectList(project_type)
 
     def populateProjectOverview(self, selected_project):
+        '''
+        populate the project details based on selected project from list
+        :param selected_project: project selected from the list
+        :return:
+        '''
         if selected_project:
             project_id = int(selected_project.text().split(' | ')[0].strip())
 
@@ -515,14 +718,26 @@ class UserWindow(QMainWindow):
                 self.ui.projectOverviewTaskTable.setItem(row, 3, QTableWidgetItem(task.get_task_completion()))
 
     def initProjectsBox(self):
+        '''
+        Initializes the project select box for task tab
+        :return:
+        '''
         self.populateProjectsBox()
         self.show()
 
     def initEmployeeBox(self):
+        '''
+        Initializes the employee select box for task tab
+        :return:
+        '''
         self.populateEmployeeBox()
         self.show()
 
     def populateProjectsBox(self):
+        '''
+        Populates the project select box for task tab
+        :return:
+        '''
         projects = projectBoxSQL()
         self.ui.selectTaskProjectInput.clear()
         self.ui.selectTaskProjectInput.addItem('0 | All')
@@ -531,6 +746,10 @@ class UserWindow(QMainWindow):
         self.ui.selectTaskProjectInput.setCurrentIndex(0)
 
     def populateEmployeeBox(self):
+        '''
+        Populates the employee select box for task
+        :return:
+        '''
         employees = employeeBoxSQL()
         self.ui.selectTaskEmployeeInput.clear()
         self.ui.selectTaskEmployeeInput.addItem('0 | All')
@@ -539,22 +758,42 @@ class UserWindow(QMainWindow):
         self.ui.selectTaskEmployeeInput.setCurrentIndex(0)
 
     def initTaskList(self):
+        '''
+        Initializes the task list
+        :return:
+        '''
         self.populateTasksList('0', '0', 'All')
         self.show()
 
     def populateTasksList(self, project_id, employee_id, task_status):
+        '''
+        Populates the task list based on selected criteria
+        :param project_id: id for selected project
+        :param employee_id: id for selected employee
+        :param task_status: task type
+        :return:
+        '''
         tasks = taskListSQL(project_id, employee_id, task_status)
         self.ui.openTaskList.clear()
         for task in tasks:
             self.ui.openTaskList.addItem(f'{task[1]} | {task[0]}')
 
     def updateTasksList(self):
+        '''
+        Updates the task list based on selected criteria
+        :return:
+        '''
         project_id = self.ui.selectTaskProjectInput.currentText().split(' | ')[0].strip()
         employee_id = self.ui.selectTaskEmployeeInput.currentText().split(' | ')[0].strip()
         task_status = self.ui.selectTaskTypeInput.currentText()
         self.populateTasksList(project_id, employee_id, task_status)
 
     def populateTaskDetails(self, selected_task):
+        '''
+        Populates the task details based on selected task
+        :param selected_task: task selected from task list
+        :return:
+        '''
         if selected_task:
             task_id = int(selected_task.text().split(' | ')[0].strip())
             task_details = taskDetailsSQL(task_id)
@@ -568,6 +807,10 @@ class UserWindow(QMainWindow):
 
 
     def updateTaskCompletion(self):
+        '''
+        Updates the task completion for tasks the user owns
+        :return:
+        '''
         if int(self.ui.openTaskOwnerLabel.text().split(' | ')[0].strip()) == self.employee_id:
             selected_task = self.ui.openTaskList.currentItem()
             if selected_task:
@@ -588,6 +831,10 @@ class UserWindow(QMainWindow):
             QMessageBox.information(None, None, "You can't edit this task.")
 
     def writeComment(self):
+        '''
+        create a comment for selected task if user owns task
+        :return:
+        '''
         if int(self.ui.openTaskOwnerLabel.text().split(' | ')[0].strip()) == self.employee_id:
             selected_task = self.ui.openTaskList.currentItem()
             if selected_task:
@@ -600,16 +847,30 @@ class UserWindow(QMainWindow):
             QMessageBox.information(None, None, "You can't comment on this task.")
 
     def refreshCommentBox(self):
+        '''
+        refresh comment box
+        :return:
+        '''
         self.ui.commentLineEdit.clear
         self.populateCommentBox()
 
     def systemComment(self, task_id, comment_text):
+        '''
+        create system comment
+        :param task_id: id for task the comment is for
+        :param comment_text: text of the comment
+        :return:
+        '''
         employee_id = 0
         current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         writeCommentSQL(task_id, employee_id, comment_text, current_date_time)
         self.refreshCommentBox()
 
     def populateCommentBox(self):
+        '''
+        populate comment box for selected task
+        :return:
+        '''
         selected_task = self.ui.openTaskList.currentItem()
         if selected_task:
             task_id = int(selected_task.text().split(' | ')[0].strip())
@@ -619,6 +880,10 @@ class UserWindow(QMainWindow):
                 self.ui.commentBox.append(comment.__str__())
 
     def setHomeDetails(self):
+        '''
+        set home details for logged-in user
+        :return:
+        '''
         employee_id = self.employee_id
         details = homePageUserSQL(employee_id)
         self.ui.homeWelcomeLabel.setText(f'Welcome {details.get_employee_name()}!')
@@ -628,6 +893,10 @@ class UserWindow(QMainWindow):
 
 
     def changeOwnPassword(self):
+        '''
+        change password for logged-in user
+        :return:
+        '''
         check1 = self.ui.changePasswordInput1.text()
         check2 = self.ui.changePasswordInput2.text()
         if check1 == check2 and check1 != '':
@@ -635,7 +904,12 @@ class UserWindow(QMainWindow):
             QMessageBox.information(None, None, 'Password has been changed')
         else:
             QMessageBox.information(None, None, 'Please enter valid password')
+
     def open_login_page(self):
+        '''
+        open login when user logs out
+        :return:
+        '''
         self.login_page = LoginWindow()
         self.login_page.show()
         self.close()
@@ -649,6 +923,10 @@ class LoginWindow(QMainWindow):
         self.ui.loginButton.clicked.connect(self.login)
 
     def login(self):
+        '''
+        logs user into correct page based on admin flag or rejects if the user details don't match database
+        :return:
+        '''
         username = self.ui.loginUsernameInput.text()
         password = self.ui.loginPasswordInput.text()
         user = login(username, password)
@@ -661,11 +939,21 @@ class LoginWindow(QMainWindow):
             pass
 
     def open_user_page(self, employee_id):
+        '''
+        opens user window
+        :param employee_id:
+        :return:
+        '''
         self.user_page = UserWindow(employee_id)
         self.user_page.show()
         self.close()
 
     def open_admin_page(self, employee_id):
+        '''
+        opens admin window
+        :param employee_id:
+        :return:
+        '''
         self.admin_page = AdminWindow(employee_id)
         self.admin_page.show()
         self.close()
