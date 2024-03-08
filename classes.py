@@ -1,4 +1,7 @@
 class Project_Overview_Project:
+    '''
+    A class for storing project details
+    '''
     def __init__(self, project_name, project_description, project_deadline, project_completion):
         self.project_name = project_name
         self.project_description = project_description
@@ -15,6 +18,9 @@ class Project_Overview_Project:
 
 
 class Project_Overview_Tasks:
+    '''
+    A class for storing task details for a project
+    '''
     def __init__(self, task_name, employee_name, task_deadline, task_completion):
         self.task_name = task_name
         self.employee_name = employee_name
@@ -30,6 +36,9 @@ class Project_Overview_Tasks:
         return self.employee_name
 
 class Task_Details:
+    '''
+    A class for storing task details for a selected task
+    '''
     def __init__(self, task_name, task_desc, task_deadline, task_completion):
         self.task_name = task_name
         self.task_desc = task_desc
@@ -45,6 +54,9 @@ class Task_Details:
         return self.task_deadline
 
 class Comment:
+    '''
+    A class for creating string representations of comments
+    '''
     def __init__(self, employee_name, comment_text, sent_datetime):
         self.employee_name = employee_name
         self.comment_text = comment_text
@@ -53,6 +65,9 @@ class Comment:
         return f'[{self.sent_datetime}] | [{self.employee_name}] --- {self.comment_text}'
 
 class HomePageManager:
+    '''
+    A class for storing home pages details for an admin
+    '''
     def __init__(self, employee_name, overdue_task_count, overdue_project_count, approval_task_count, approval_project_count):
         self.employee_name = employee_name
         self.overdue_task_count = overdue_task_count
@@ -71,6 +86,9 @@ class HomePageManager:
         return self.approval_project_count
 
 class HomePageUser:
+    '''
+    A class for storing home pages details for a user
+    '''
     def __init__(self, employee_name, task_count, project_count, overdue_task_count):
         self.employee_name = employee_name
         self.task_count = task_count
