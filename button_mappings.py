@@ -8,32 +8,38 @@ import hashlib
 
 
 def hash_password(password):
+    '''
+    Function to hash a password.
+    :param password: password to hash
+    :return: hashed password
+    '''
     return hashlib.sha256(password.encode()).hexdigest()
 
 def login(employee_id, password):
-    # Connect to the SQLite database
+    '''
+    This function is used to check if a user has entered correct login details and what privileges they have.
+    :param employee_id: employee id to check if exists
+    :param password: password to check if matches employee id
+    :return: if user exists and is correct returns tuple (employee_id, password, admin_flag)
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cursor = conn.cursor()
     hashed_password = hash_password(password)
-    # Query the database for the provided username and password
+
     cursor.execute("SELECT employee_id, password, admin_flag FROM users WHERE employee_id=? AND password=?", (employee_id, hashed_password))
     user = cursor.fetchone()
 
-    # Close the database connection
     conn.close()
 
-    # Check if a user with the provided credentials exists
+
     if user is not None and user[0] != 0:
 
-        if user[2] == 1:  # Check if the user is an admin
+        if user[2] == 1:
             QMessageBox.information(None, "Login", "Login Successful! Welcome Admin!")
 
-
-            # Redirect to admin page
         else:
             QMessageBox.information(None, "Login", "Login Successful!")
 
-            # Redirect to standard user page
     else:
         QMessageBox.warning(None, "Login", "Invalid Employee ID or Password!")
         user = None
@@ -42,6 +48,11 @@ def login(employee_id, password):
 
 
 def projectListSQL(project_type):
+    '''
+    This function returns a list of all projects depending on the type of project.
+    :param project_type: str type of project All, Open, Outstanding or Closed
+    :return: list of tuples format (project_name, project_id)
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
 
@@ -60,6 +71,11 @@ def projectListSQL(project_type):
     return projects
 
 def projectOverviewProjectDetailsSQL(project_id):
+    '''
+    This function returns the project details for a selected project.
+    :param project_id: project id of the project to get details for.
+    :return: project details as an object of class Project_Overview_Project.
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('SELECT project_name, project_desc, project_deadline, AVG(task_completion) FROM projects p '
@@ -74,6 +90,11 @@ def projectOverviewProjectDetailsSQL(project_id):
     return project
 
 def projectOverviewTasksSQL(project_id):
+    '''
+    Function to get details of a projects tasks
+    :param project_id: project id of the project to get task details for.
+    :return: list of Project_Overview_Task objects.
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('SELECT t.task_name, employee_name, t.task_deadline, t.task_completion FROM task as t '
@@ -87,6 +108,12 @@ def projectOverviewTasksSQL(project_id):
     return tasks
 
 def manageProjectsSQL(project_id, new_deadline):
+    '''
+    Function to change a project's deadline.
+    :param project_id: project id of the project to change the deadline of.
+    :param new_deadline: new deadline for the project
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('UPDATE projects SET project_deadline = ? WHERE project_id = ?', (new_deadline, project_id))
@@ -95,6 +122,11 @@ def manageProjectsSQL(project_id, new_deadline):
 
 
 def closeProjectsSQL(project_id):
+    '''
+    Function to close a project (set status to 2)
+    :param project_id: project to close
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('UPDATE projects SET project_status = 2 WHERE project_id = ?', (project_id,))
@@ -103,6 +135,11 @@ def closeProjectsSQL(project_id):
 
 
 def reopenProjectsSQL(project_id):
+    '''
+    Function to reopen a project (set status to 1)
+    :param project_id: project to reopen
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('UPDATE projects SET project_status = 1 WHERE project_id = ?', (project_id,))
@@ -111,6 +148,10 @@ def reopenProjectsSQL(project_id):
 
 
 def projectBoxSQL():
+    '''
+    Function to query database for all projects
+    :return: list of tuples containing (project name, project_id)
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('SELECT project_name, project_id FROM projects')
@@ -119,6 +160,10 @@ def projectBoxSQL():
     return projects
 
 def employeeBoxSQL():
+    '''
+    Function to query database for all employees
+    :return: list of tuples containing (employee name, employee_id)
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('SELECT employee_name, employee_id FROM users WHERE not employee_id = 0')
@@ -127,6 +172,13 @@ def employeeBoxSQL():
     return employees
 
 def taskListSQL(project_id, employee_id, task_status):
+    '''
+    Function to retrieve all tasks based on selected criteria in GUI
+    :param project_id: project_id to retrieve tasks for or All
+    :param employee_id: employee_id to retrieve tasks for or All
+    :param task_status: task_status to retrieve tasks for or All
+    :return: list of tuples containing (task_name,task_id)
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     if project_id == '0':
@@ -194,6 +246,11 @@ def taskListSQL(project_id, employee_id, task_status):
     return tasks
 
 def taskDetailsSQL(task_id):
+    '''
+    This function will return the details of a selected task
+    :param task_id: task_id of the task to get the details for
+    :return: Task_Details object containing the details of the selected task
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('SELECT task_name, task_desc, task_deadline, task_completion FROM task WHERE task_id = ?', (task_id,))
@@ -203,6 +260,12 @@ def taskDetailsSQL(task_id):
     return task
 
 def updateTaskCompletionSQL(task_id, task_completion):
+    '''
+    This function will update the task completion for a selected task
+    :param task_id: task_id of the task to update
+    :param task_completion: new task_completion to set
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('UPDATE task SET task_completion = ? WHERE task_id = ?', (task_completion, task_id))
@@ -210,6 +273,12 @@ def updateTaskCompletionSQL(task_id, task_completion):
     conn.close()
 
 def updateTaskDeadlineSQL(task_id, new_deadline):
+    '''
+    This function will update the task deadline for a selected task
+    :param task_id: task_id of the task to update
+    :param new_deadline: new deadline to set
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('UPDATE task SET task_deadline = ? WHERE task_id = ?', (new_deadline, task_id))
@@ -219,6 +288,12 @@ def updateTaskDeadlineSQL(task_id, new_deadline):
 
 
 def updateTaskUserSQL(task_id, new_user):
+    '''
+    This function will update the user for a selected task
+    :param task_id: task_id of the task to update
+    :param new_user: new user to set
+    :return: updates database and returns employee_id
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('SELECT employee_id FROM users WHERE employee_name = ?', (new_user, ))
@@ -231,6 +306,11 @@ def updateTaskUserSQL(task_id, new_user):
 
 
 def closeTaskSQL(task_id):
+    '''
+    This function will close a selected task (set status to 2)
+    :param task_id: task_id of the task to close
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('UPDATE task SET task_status = 2 WHERE task_id = ?', (task_id,))
@@ -239,6 +319,11 @@ def closeTaskSQL(task_id):
 
 
 def reopenTaskSQL(task_id):
+    '''
+    This function will reopen a selected task (set status to 1)
+    :param task_id: the task_id of the task to reopen
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectmanagement.db')
     cur = conn.cursor()
     cur.execute('UPDATE task SET task_status = 1 WHERE task_id = ?', (task_id,))
@@ -247,6 +332,14 @@ def reopenTaskSQL(task_id):
 
 
 def writeCommentSQL(task_id, employee_id, comment_text, current_date_time):
+    '''
+    This function will insert a comment to the database
+    :param task_id: task_id of the comment
+    :param employee_id: employee_id of the comment
+    :param comment_text: text of the comment
+    :param current_date_time: date and time of the comment
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
 
@@ -256,6 +349,11 @@ def writeCommentSQL(task_id, employee_id, comment_text, current_date_time):
     conn.close()
 
 def commentsSQL(task_id):
+    '''
+    This function will return the details of all comments for a selected task ordered by date_time
+    :param task_id: task_id of the comments to return
+    :return: list of Comment objects
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('SELECT u.employee_name, c.comment_text, c.date_time FROM comment c INNER JOIN '
@@ -268,6 +366,13 @@ def commentsSQL(task_id):
     return comments
 
 def newProjectSQL(project_name, project_desc, project_deadline):
+    '''
+    This function inserts a new project in the database
+    :param project_name: name of the project
+    :param project_desc: description of the project
+    :param project_deadline: deadline of the project
+    :return: updates database with project details
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('''INSERT INTO projects (project_name, project_desc, project_deadline, project_status)
@@ -276,6 +381,15 @@ def newProjectSQL(project_name, project_desc, project_deadline):
     conn.close()
 
 def newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline):
+    '''
+    This function inserts a new task in the database
+    :param project_id: id of the project
+    :param employee_id: id of the employee
+    :param task_name: name of the task
+    :param task_desc: description of the task
+    :param task_deadline: deadline of the task
+    :return: updates database with task details
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('''INSERT INTO task (project_id, employee_id, task_name, task_desc, task_completion, task_deadline, task_status)
@@ -288,6 +402,14 @@ def newTaskSQL(project_id, employee_id, task_name, task_desc, task_deadline):
     return new_task_id
 
 def newUserSQL(employee_id, employee_name, email, admin_flag):
+    '''
+    Function to create a new user in the database
+    :param employee_id: id of the employee
+    :param employee_name: name of the employee
+    :param email: email of the employee
+    :param admin_flag: flag to indicate whether the employee is an admin(0 no,1 yes)
+    :return: updates database with user details
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     hashed_password = hash_password(employee_id)
@@ -297,19 +419,39 @@ def newUserSQL(employee_id, employee_name, email, admin_flag):
     conn.close()
 
 def changeUserPrivilegeSQL(employee_id, admin_flag):
+    '''
+    Function to change the user's privileges
+    :param employee_id: id of the employee
+    :param admin_flag: int flag to indicate whether the employee is an admin(0 no,1 yes)
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('UPDATE users SET admin_flag = ? WHERE employee_id = ?', (admin_flag, employee_id))
     conn.commit()
     conn.close()
+
 def resetPasswordSQL(employee_id, password):
+    '''
+    Function to reset the password for the employee
+    :param employee_id: id of employee
+    :param password: new password of the employee
+    :return: updates database with hashed password
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     hashed_password = hash_password(password)
     cur.execute('UPDATE users SET password = ? WHERE employee_id = ?', (hashed_password, employee_id))
     conn.commit()
     conn.close()
+
 def deleteUserSQL(employee_id, admin_id):
+    '''
+    Function to delete the employee from the database and reassign their tasks to the admin deleting them
+    :param employee_id: id of employee
+    :param admin_id: id of admin
+    :return: updates database
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('UPDATE task SET employee_id = ? WHERE employee_id = ?', (admin_id, employee_id))
@@ -318,6 +460,11 @@ def deleteUserSQL(employee_id, admin_id):
     conn.close()
 
 def homePageManagerSQL(employee_id):
+    '''
+    Function to get homepage details for an admin
+    :param employee_id: id of employee
+    :return: HomePageManager object
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('SELECT employee_name FROM users WHERE employee_id = ?', (employee_id,))
@@ -339,6 +486,11 @@ def homePageManagerSQL(employee_id):
     return homePageDetails
 
 def taskOwnerSQL(task_id):
+    '''
+    This function returns task owner name and task description
+    :param task_id: id of the task
+    :return: tuple with task owner name and task description
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('SELECT employee_name, u.employee_id FROM users u INNER JOIN task t on u.employee_id = t.employee_id '
@@ -349,6 +501,11 @@ def taskOwnerSQL(task_id):
     return task_owner
 
 def homePageUserSQL(employee_id):
+    '''
+    This function gets home page details for an employee
+    :param employee_id: id of the employee
+    :return: HomePageUser object
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('SELECT u.employee_name, count(distinct t.task_id), count(distinct project_id) FROM task t INNER JOIN '
@@ -361,7 +518,13 @@ def homePageUserSQL(employee_id):
     conn.close()
     home_details = HomePageUser(details1[0],details1[1],details1[2],overdue[0])
     return home_details
+
 def getUserEmailTaskSQL(employee_id):
+    '''
+    This function returns the email and name for an employee.
+    :param employee_id: id of the employee
+    :return: tuple (email, name)
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('SELECT email, employee_name FROM users WHERE employee_id = ?', (employee_id,))
@@ -370,6 +533,11 @@ def getUserEmailTaskSQL(employee_id):
     return email
 
 def getUserEmailProjectSQL(project_id):
+    '''
+    This function returns the emails and names for employees assigned to a project
+    :param project_id: id of the project
+    :return: list of tuples (email,name)
+    '''
     conn = sqlite3.connect('projectManagement.db')
     cur = conn.cursor()
     cur.execute('SELECT email, employee_name FROM users WHERE employee_id IN (SELECT distinct employee_id FROM task '
